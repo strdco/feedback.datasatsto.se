@@ -1,0 +1,217 @@
+body {
+    background-image: url('/wesley-tingey--Irs24DzLxM-unsplash.jpg');
+    background-size: cover;
+    background-attachment: fixed;
+    font-family: "Helvetica Neue", "Helvetica", "Arial", "sans-serif";
+}
+
+.header, .question {
+    padding: 1em;
+    max-width: 30em;
+    min-height: 2em;
+    margin: auto;
+    border-style: none solid dashed solid;
+    border-width: 1px;
+    border-color: rgb(0, 0, 0, 0.5);
+}
+
+.header {
+    background-color: rgb(255, 255, 255, 0.5);
+    backdrop-filter: blur(0.5em);
+}
+
+.header .title {
+    font-size: 150%;
+    font-weight: bold;
+}
+
+.header ul.speakers li {
+    display: block;
+}
+
+.question {
+    background-color: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(0.25em);
+    border-bottom-color: rgb(200, 200, 200);
+    border-bottom-width: 1px;
+}
+
+.question:first-child {
+    border-top-style: solid;
+    border-top-left-radius: 1em;
+}
+
+.question:last-child {
+    border-bottom-style: solid;
+    border-bottom-color: rgb(0 0, 0, 0.5);
+    border-bottom-right-radius: 1em;
+}
+
+.question span.question-text {
+    display: block;
+    font-weight: bold;
+    padding: 1em 0 0 0;
+}
+
+.question.required span.question-text::after {
+    content: "*";
+    color: rgb(255, 0, 0);
+    margin-left: 0.25em;
+}
+
+.question span.question-description {
+    display: block;
+    font-style: italic;
+    padding: 0.25em 0 0 0;
+}
+
+.answers {
+    max-width: 30em;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    row-gap: 0.5em;
+    border-radius: 1em;
+    margin-top: 1em;
+    background-color: rgba(128, 128, 128, 0.15);
+    border-style: solid;
+    border-width: 1px;
+    border-color: rgba(0, 0, 0, 0.20);
+}
+
+.answers .answer {
+    flex-grow: 1;
+    text-align: center;
+    padding-top: 0.5em;
+    padding-bottom: 0.5em;
+    border-radius: inherit;
+}
+
+.answers.checkboxes {
+    display: block;
+    background-color: rgba(128, 128, 128, 0.05);
+    border-style: none none none solid;
+    padding-bottom: 1em;
+    border-radius: 0;
+}
+
+.answers.checkboxes .answer {
+    width: 100%;
+    padding-top: 0.25em;
+    padding-bottom: 0.25em;
+}
+
+.answers.checkboxes .answer span {
+    padding: 0 0 0 0.5em;
+}
+
+.answers .answer:hover {
+    background-color: rgba(255, 255, 255, 0.25);
+}
+
+.answers .input[†ype="radio"] {
+    /* TBD */
+}
+
+.answers .input[†ype="checkbox"] {
+    /* TBD */
+}
+
+.answers .answer label {
+    display: flex;
+}
+
+.answers.checkboxes label {
+    padding-left: 0.5em;
+}
+
+.answers .answer label span {
+    font-weight: normal;
+}
+
+.annotations {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    padding: 0.5em 0.5em 0 0.5em;
+}
+
+.annotations .annotation {
+    flex-grow: 1;
+    text-align: center;
+}
+
+.annotations .annotation:first-of-type {
+    text-align: left;
+}
+
+.question.has-percentages .annotations .annotation:first-of-type::before {
+    content: "";
+    width: 0;
+    height: 0;
+    position: absolute;
+    -left: -0.25em;
+    margin-left: -1.25em;
+    border-color: transparent rgb(0, 0, 0, 0.25) transparent transparent;
+    border-width: 0.5em;
+    border-style: solid;
+}
+
+.annotations .annotation:last-of-type {
+    text-align: right;
+}
+
+.question.has-percentages .annotations .annotation:last-of-type::after {
+    content: "";
+    width: 0;
+    height: 0;
+    margin-left: 0.25em;
+    position: absolute;
+    border-color: transparent transparent transparent rgb(0, 0, 0, 0.25);
+    border-width: 0.5em;
+    border-style: solid;
+}
+.question textarea {
+    width: calc(100% - 0.5em);
+    min-width: calc(100% - 0.5em);
+    max-width: calc(100% - 0.5em);
+    min-height: 1em;
+    border-width: 1px;
+    border-style: solid;
+    border-color: rgba(0, 0, 0, 0.20);
+    font-family: inherit;
+    font-size: inherit;
+    padding: 0.5em;
+    margin: 0.5em 0 0 -0.5em;
+}
+
+
+
+.bad, .avg, .good {
+    backdrop-filter: blur(1.5em);
+    border-left-width: 4px;
+    border-right-width: 1px;
+    /*border-bottom-color: rgb(255, 255, 255);*/
+    border-style: solid;
+}
+
+.bad {
+    border-top-color: rgb(255, 0, 0, 0.75);
+    border-left-color: rgb(255, 0, 0, 0.75);
+    border-right-color: rgb(128, 0, 0, 0.75);
+    border-bottom-color: rgb(128, 0, 0, 0.75);
+}
+
+.avg {
+    border-top-color: rgb(255, 200, 0, 0.75);
+    border-left-color: rgb(255, 200, 0, 0.75);
+    border-right-color: rgb(160, 128, 0, 0.75);
+    border-bottom-color: rgb(160, 128, 0, 0.75);
+}
+
+.good {
+    border-top-color: rgb(0, 200, 0, 0.75);
+    border-left-color: rgb(0, 200, 0, 0.75);
+    border-right-color: rgb(0, 96, 0, 0.75);
+    border-bottom-color: rgb(0, 96, 0, 0.75);
+}
