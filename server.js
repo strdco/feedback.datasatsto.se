@@ -139,7 +139,7 @@ app.get('/:sessionid([0-9]*)', function (req, res, next) {
         }
     };
 
-    res.status(200).sendFile('session-template.html', options, function(err) {
+    res.status(200).sendFile('review-session.html', options, function(err) {
         if (err) {
             res.sendStatus(404);
             return;
@@ -161,7 +161,6 @@ app.get('/api/create-response/:sessionid', async function (req, res, next) {
   Get session from a Sessionize event
 
   TODO: Error handling
-  TODO: Synchronizing sessions and speakers for existing events
   TODO: Parameter for how long a session accepts responses
   ---------------------------------------------------------------------------*/
 
@@ -266,11 +265,12 @@ app.post('/api/save', async function (req, res, next) {
     var answerOrdinal=parseInt(req.body.answerOrdinal) || null;
     var plaintext=req.body.plaintext;
 
-    console.log(responseId, clientKey, questionId, answerOrdinal, plaintext);
-    await saveResponse(responseId, clientKey, questionId, answerOrdinal, plaintext);
-    console.log('Done.');
-
-    res.status(200).send({ "status": "ok" });
+    var output=await saveResponse(responseId, clientKey, questionId, answerOrdinal, plaintext);
+    if (output.error) {
+        res.status(500).send({ "status": "error" });
+    } else {
+        res.status(200).send({ "status": "ok" });
+    }
 
 });
 
@@ -393,7 +393,6 @@ async function createEvent(name, apikey, templateName) {
         });
 }
 
-
 async function createPresenter(name, email, identifier) {
 
     return new Promise((resolve, reject) => {
@@ -440,6 +439,7 @@ async function createSessionPresenter(sessionId, presenterId, isOwner) {
 }
 
 async function initResponse(sessionId) {
+
     return new Promise((resolve, reject) => {
         cannedSql.sqlQuery(connectionString,
             'EXECUTE Feedback.Init_Response  @Session_ID=@sessionId;',
@@ -464,7 +464,7 @@ async function saveResponse(responseId, clientKey, questionId, answerOrdinal, pl
                 { "name": 'answerOrdinal',  "type": cannedSql.Types.SmallInt,           "value": answerOrdinal },
                 { "name": 'plaintext',      "type": cannedSql.Types.NVarChar,           "value": plaintext }],
             function(recordset) {
-                resolve();
+                resolve(recordset);
             });
         });
 }

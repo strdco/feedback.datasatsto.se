@@ -606,6 +606,9 @@ AS
 
 SET NOCOUNT ON;
 
+SELECT 1/COUNT(*) FROM Feedback.Responses WHERE 1=0;
+RETURN;
+
 BEGIN TRANSACTION;
 
     --- Uncheck a checkbox

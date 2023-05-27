@@ -113,7 +113,8 @@
         function connectionError(info) {
             // 5701 "changed database context to .."
             // 5703 "changed language setting to .."
-            if ([5701, 5703].indexOf(info.number)==-1 || printDebugInfo) {
+            // 8153 "Null value is eliminated by an aggregate .."
+            if ([5701, 5703, 8153].indexOf(info.number)==-1 || printDebugInfo) {
                 console.log('Msg '+info.number + ': ' + info.message);
             }
         }

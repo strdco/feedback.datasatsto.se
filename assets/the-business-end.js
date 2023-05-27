@@ -1,18 +1,17 @@
     var clientKey;
     var responseId;
+    var statusTimeoutId;
 
     window.onload = function whatsUp() {
 
-        /*
-        *
-        * "Fill" colors on answer options. For example, if you've set option 1 to red and option 5 to green,
-        * this code will apply shades of yellow/orange to options 2, 3, and 4.
-        *
-        */
-
-        var docPath=document.location.pathname.substring(1);
+        // Create the status bar
+        var statusbarDiv=document.createElement('div');
+        statusbarDiv.classList.add('statusbar');
+        statusbarDiv.classList.add('hidden');
+        document.body.appendChild(statusbarDiv);
 
         // If the path is entirely numeric, we're reviewing a session:
+        var docPath=document.location.pathname.substring(1);
         if (isFinite(docPath) && docPath!='') {
 
             var xhr = new XMLHttpRequest();
@@ -35,8 +34,33 @@
             xhr.open('GET', '/api/create-response/'+docPath);
             xhr.send();
         }
-    };
+    }
 
+    function showStatus(statusText, cssClass) {
+        // If already visible, cancel the scheduled fade-out.
+        if (statusTimeoutId) {
+            clearTimeout(statusTimeoutId);
+            statusTimeoutId=null;
+        }
+
+        var statusbarDiv=document.getElementsByClassName('statusbar')[0];
+        statusbarDiv.innerText=statusText;
+
+        // Remove all the current CSS classes:
+        statusbarDiv.classList='statusbar';
+
+        // Add a particular CSS class
+        if (cssClass) {
+            statusbarDiv.classList.add(cssClass);
+        }
+
+        // Schedule a new fade-out:
+        statusTimeoutId=setTimeout(hideStatus, 1000);
+    }
+
+    function hideStatus() {
+        document.getElementsByClassName('statusbar')[0].classList.add('hidden');
+    }
 
 
 
@@ -204,12 +228,13 @@
         xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
 
         xhr.onload = function() {
-            // Login failed for some reason:
             if (xhr.status==200) {
-                return;
+                showStatus('Saved', 'good');
+            } else {
+                showStatus('There was a problem saving your data', 'bad');
             }
         }
-    
+
         xhr.send(postBody);
     }
 

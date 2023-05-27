@@ -3,6 +3,44 @@ body {
     background-size: cover;
     background-attachment: fixed;
     font-family: "Helvetica Neue", "Helvetica", "Arial", "sans-serif";
+    margin: 0;
+}
+
+.statusbar {
+    background-color: rgb(255, 220, 128);
+    color: rgb(0, 0, 0);
+    border-style: solid;
+    border-width: 1px 1px 1px 1em;
+    border-color: rgb(255, 200, 0);
+    border-top-right-radius: 0.5em;
+    border-bottom-right-radius: 0.5em;
+    font-size: 0.85em;
+    position: fixed;
+    margin-left: 0;
+    padding: 0.5em 3em 0.5em 3em;
+    top: 0.5em;
+    z-index: 100;
+    opacity: 1.0;
+}
+
+.statusbar.hidden {
+    opacity: 0;
+    transition: opacity 0.5s linear;
+}
+
+.statusbar.bad.hidden {
+    opacity: 0;
+    transition: opacity 3.0s linear;
+}
+
+.statusbar.good {
+    background-color: rgb(192, 255, 192, 0.75);
+    border-color: rgb(128, 220, 128, 0.75);
+}
+
+.statusbar.bad {
+    background-color: rgb(255, 192, 192, 0.75);
+    border-color: rgb(220, 128, 128, 0.75);
 }
 
 .header, .question {
@@ -18,6 +56,8 @@ body {
 .header {
     background-color: rgb(255, 255, 255, 0.5);
     backdrop-filter: blur(0.5em);
+    margin-top: 1em;
+    border-top-style: solid;
 }
 
 .header .title {
@@ -38,7 +78,6 @@ body {
 
 .question:first-child {
     border-top-style: solid;
-    border-top-left-radius: 1em;
 }
 
 .question:last-child {
@@ -187,7 +226,7 @@ body {
 
 
 
-.bad, .avg, .good {
+.question.bad, .question.avg, .question.good {
     backdrop-filter: blur(1.5em);
     border-left-width: 4px;
     border-right-width: 1px;
@@ -195,21 +234,21 @@ body {
     border-style: solid;
 }
 
-.bad {
+.question.bad {
     border-top-color: rgb(255, 0, 0, 0.75);
     border-left-color: rgb(255, 0, 0, 0.75);
     border-right-color: rgb(128, 0, 0, 0.75);
     border-bottom-color: rgb(128, 0, 0, 0.75);
 }
 
-.avg {
+.question.avg {
     border-top-color: rgb(255, 200, 0, 0.75);
     border-left-color: rgb(255, 200, 0, 0.75);
     border-right-color: rgb(160, 128, 0, 0.75);
     border-bottom-color: rgb(160, 128, 0, 0.75);
 }
 
-.good {
+.question.good {
     border-top-color: rgb(0, 200, 0, 0.75);
     border-left-color: rgb(0, 200, 0, 0.75);
     border-right-color: rgb(0, 96, 0, 0.75);
