@@ -1,50 +1,110 @@
-body {
-    background-color: rgb(224, 224, 224);
-    font-family: "Helvetica Neue", "Helvetica", "Arial", "sans-serif";
-    margin: 0;
-}
+/* Page style */
 
-img.header-logo {
-    display: block;
-    margin: auto;
-}
+    body {
+        background-color: rgb(224, 224, 224);
+        font-family: "Helvetica Neue", "Helvetica", "Arial", "sans-serif";
+        margin: 0;
+    }
 
-.statusbar {
-    background-color: rgb(255, 220, 128);
-    color: rgb(0, 0, 0);
-    border-style: solid;
-    border-width: 1px 1px 1px 1em;
-    border-color: rgb(255, 200, 0);
-    border-top-right-radius: 0.5em;
-    border-bottom-right-radius: 0.5em;
-    font-size: 0.85em;
-    position: fixed;
-    margin: auto;
-    padding: 1em 4em 1em 4em;
-    top: 0.5em;
-    z-index: 100;
-    opacity: 1.0;
-}
+    body.sessions-page {
+        padding-top: 4em;
+        padding-bottom: 1em;
+        text-align: center;
+    }
 
-.statusbar.hidden {
-    opacity: 0;
-    transition: opacity 0.5s linear;
-}
+/* Text selection */
 
-.statusbar.bad.hidden {
-    opacity: 0;
-    transition: opacity 3.0s linear;
-}
+    ::selection {
+        background: var(--theme-color-1); /* WebKit/Blink Browsers */
+        color: var(--theme-white);
+    }
+    ::-moz-selection {
+        background: var(--theme-color-1); /* Gecko Browsers */
+        color: var(--theme-white);
+    }
 
-.statusbar.good {
-    background-color: rgb(192, 255, 192, 0.75);
-    border-color: rgb(128, 220, 128, 0.75);
-}
+/* Header image */
 
-.statusbar.bad {
-    background-color: rgb(255, 192, 192, 0.75);
-    border-color: rgb(220, 128, 128, 0.75);
-}
+    img.header-logo {
+        display: block;
+        margin: auto;
+    }
+
+/* Popup status messages that appear and fade out automatically */
+
+    .statusbar {
+        background-color: rgb(255, 220, 128);
+        color: rgb(0, 0, 0);
+        border-style: solid;
+        border-width: 1px 1px 1px 1em;
+        border-color: rgb(255, 200, 0);
+        border-top-right-radius: 0.5em;
+        border-bottom-right-radius: 0.5em;
+        font-size: 0.85em;
+        position: fixed;
+        margin: auto;
+        padding: 1em 4em 1em 4em;
+        top: 0.5em;
+        z-index: 100;
+        opacity: 1.0;
+    }
+
+    .statusbar.hidden {
+        opacity: 0;
+        transition: opacity 0.5s linear;
+    }
+
+    .statusbar.bad.hidden {
+        opacity: 0;
+        transition: opacity 3.0s linear;
+    }
+
+    .statusbar.good {
+        background-color: rgb(192, 255, 192, 0.75);
+        border-color: rgb(128, 220, 128, 0.75);
+    }
+
+    .statusbar.bad {
+        background-color: rgb(255, 192, 192, 0.75);
+        border-color: rgb(220, 128, 128, 0.75);
+    }
+
+/* Standard "box" for the header, a question card, the footer,
+   and session cards in the overview. */
+
+    .header, .question, .footer, .session {
+        padding: 2em 1em;
+        max-width: 30em;
+        min-height: 2em;
+        margin: 0 auto; /* center div horizontally */
+        border-style: none solid dashed solid;
+        border-width: 1px;
+        border-color: var(--border-color);
+    }
+
+    .question, .session {
+        background-color: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(0.25em);
+        border-bottom-color: rgb(200, 200, 200);
+        border-bottom-width: 1px;
+    }
+    
+/* Feedback form header */
+
+    .header {
+        background-color: var(--header-background);
+        backdrop-filter: blur(0.5em);
+        margin-top: 1em;
+        border-top-style: solid;
+    }
+
+    .header ul.speakers {
+        padding-inline-start: 0;
+    }
+
+    .header ul.speakers li {
+        display: block;
+    }
 
 
 
@@ -52,239 +112,223 @@ img.header-logo {
 
 
 
-.header, .question, .footer, .session {
-    padding: 2em 1em;
-    max-width: 30em;
-    min-height: 2em;
-    margin: 0 auto; /* center div horizontally */
-    border-style: none solid dashed solid;
-    border-width: 1px;
-    border-color: rgb(0, 0, 0, 0.5);
-}
-
-.header {
-    background-color: rgb(255, 255, 255, 0.5);
-    backdrop-filter: blur(0.5em);
-    margin-top: 1em;
-    border-top-style: solid;
-}
-
-.header ul.speakers {
-    padding-inline-start: 0;
-}
-
-.header ul.speakers li {
-    display: block;
-}
-
-.footer {
-    text-align: center;
-    border-style: none;
-}
-
-.footer button.done {
-    padding: 1em 4em;
-}
 
 
-.question, .session {
-    background-color: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(0.25em);
-    border-bottom-color: rgb(200, 200, 200);
-    border-bottom-width: 1px;
-}
 
-.question.indented {
-    position: relative;
-    border-top-style: solid;
-    border-bottom-style: solid;
-    border-top-left-radius: 0.5em;
-    filter: drop-shadow(-0.1em 0.25em 0.5rem rgb(64, 64, 64, 0.25));
-}
+/* Page footer, including the "Done" button. */
 
-.question.hidden, .session.hidden {
-    display: none;
-}
+    .footer {
+        text-align: center;
+        border-style: none;
+    }
 
-.question:first-child {
-    border-top-style: solid;
-}
+    .footer button.done {
+        padding: 1em 4em;
+    }
 
-.question:last-child,
-.session:last-child {
-    border-bottom-style: solid;
-    border-bottom-color: rgb(0 0, 0, 0.5);
-    border-bottom-right-radius: 1em;
-}
 
-.question .question-text {
-    display: block;
-    font-weight: bold;
-    padding: 1em 0 0 0;
-}
+/* Questions */
 
-.question.required .question-text::after {
-    content: "*";
-    color: rgb(255, 0, 0);
-    margin-left: 0.25em;
-}
+    .question.indented {
+        position: relative;
+        border-top-style: solid;
+        border-bottom-style: solid;
+        border-top-left-radius: 0.5em;
+        filter: drop-shadow(-0.1em 0.25em 0.5rem rgb(64, 64, 64, 0.25));
+    }
 
-.question .question-description {
-    display: block;
-    font-style: italic;
-    padding: 0.25em 0 0 0;
-}
+    .question.hidden, .session.hidden {
+        display: none;
+    }
 
-/* Block of answers, i.e. the horizontal panel of radio buttons
-   or a div with checkboxes and/or text input. */
-.answers {
-    max-width: 30em;
-    display: flex;
-    flex-direction: row;
-    justify-content: space-around;
-    row-gap: 0.5em;
-    margin-top: 1em;
-}
+    .question:first-child {
+        border-top-style: solid;
+        border-top-color: var(--border-color);
+    }
 
-/* Individual answer (label containing radio button) */
-.answers .answer {
-    flex-grow: 1;
-    text-align: center;
-    padding-top: 0.5em;
-    padding-bottom: 0.5em;
-    border-radius: inherit;
-}
+/* Text blocks in the question cards */
 
-/* Block of checkboxes */
-.answers.checkboxes {
-    display: block;
-    background-color: transparent;
-    border-style: none;
-    padding-bottom: 1em;
-    border-radius: 0;
-}
+    .question .question-text {
+        display: block;
+        font-weight: bold;
+        padding: 1em 0 0 0;
+    }
 
-.answers.checkboxes .answer {
-    width: 100%;
-    padding-top: 0.25em;
-    padding-bottom: 0.25em;
-}
+    .question.required .question-text::after {
+        content: "*";
+        color: rgb(255, 0, 0);
+        margin-left: 0.25em;
+    }
 
-.answers.checkboxes .answer span {
-    padding: 0 0 0 0.5em;
-}
+    .question .question-description {
+        display: block;
+        font-style: italic;
+        padding: 0.25em 0 0 0;
+    }
 
-.answers .answer:hover {
-    background-color: rgba(255, 255, 255, 0.5);
-}
+/* Answers on question cards. */
+
+    input:focus {
+        outline-style: solid;
+        outline-color: var(--theme-color-1);
+        outline-offset: 0.5em;
+    }
+
+    input[type="radio"]:focus {
+        border-radius: 1em;
+    }
+
+    .answers {
+        max-width: 30em;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-around;
+        row-gap: 0.5em;
+        margin-top: 1em;
+    }
+
+    .answers .answer {
+        flex-grow: 1;
+        text-align: center;
+        padding-top: 0.5em;
+        padding-bottom: 0.5em;
+        border-radius: inherit;
+    }
+
+    .answers.checkboxes {
+        display: block;
+        background-color: transparent;
+        border-style: none;
+        padding-bottom: 1em;
+        border-radius: 0;
+    }
+
+    .answers.checkboxes .answer {
+        width: 100%;
+        padding-top: 0.25em;
+        padding-bottom: 0.25em;
+    }
+
+    .answers.checkboxes .answer span {
+        padding: 0 0 0 0.5em;
+    }
+
+    .answers .answer:hover {
+        background-color: rgba(255, 255, 255, 0.5);
+    }
 
 /*
-.answers .input[†ype="radio"] {
-    TBD
-}
+    .answers .input[†ype="radio"] {
+        TBD
+    }
 
-.answers .input[†ype="checkbox"] {
-    TBD
-}
+    .answers .input[†ype="checkbox"] {
+        TBD
+    }
 */
 
-.answers .answer label {
-    display: flex;
-}
+    .answers .answer label {
+        display: flex;
+    }
 
-.answers.checkboxes label {
-    padding-left: 0.5em;
-}
+    .answers.checkboxes label {
+        padding-left: 0.5em;
+    }
 
-.answers .answer label span {
-    font-weight: normal;
-}
+    .answers .answer label span {
+        font-weight: normal;
+    }
 
 /* Help texts under the horizontal answer bar; contains one
    or more annotations from left to right */
-.annotations {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    padding: 0.5em 0.5em 0 0.5em;
-}
 
-.annotations .annotation {
-    flex-grow: 1;
-    text-align: center;
-}
+    .annotations {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        padding: 0.5em 0.5em 0 0.5em;
+    }
 
-.annotations .annotation:first-of-type {
-    text-align: left;
-}
+    .annotations .annotation {
+        flex-grow: 1;
+        text-align: center;
+    }
 
-/* Adds a left-arrow before the first annotation text, provided
+    .annotations .annotation:first-of-type {
+        text-align: left;
+    }
+
+/* Add a left-arrow before the first annotation text, provided
    the answers are on a scale, i.e. the question has percentage options */
-.question.has-percentages .annotations .annotation:first-of-type::before {
-    content: "";
-    width: 0;
-    height: 0;
-    position: absolute;
-    -left: -0.25em;
-    margin-left: -1.25em;
-    border-color: transparent rgb(0, 0, 0, 0.25) transparent transparent;
-    border-width: 0.5em;
-    border-style: solid;
-}
 
-.annotations .annotation:last-of-type {
-    text-align: right;
-}
+    .question.has-percentages .annotations .annotation:first-of-type::before {
+        content: "";
+        width: 0;
+        height: 0;
+        position: absolute;
+        margin-left: -1.25em;
+        margin-top: 0.1em;
+        border-color: transparent var(--answer-border) transparent transparent;
+        border-width: 0.5em;
+        border-style: solid;
+    }
 
-/* Adds a right-arrow after the last annotation for percentage
-   questions */
-.question.has-percentages .annotations .annotation:last-of-type::after {
-    content: "";
-    width: 0;
-    height: 0;
-    margin-left: 0.25em;
-    position: absolute;
-    border-color: transparent transparent transparent rgb(0, 0, 0, 0.25);
-    border-width: 0.5em;
-    border-style: solid;
-}
+    .annotations .annotation:last-of-type {
+        text-align: right;
+    }
+
+/* .. and a right-arrow after the last annotation */
+
+    .question.has-percentages .annotations .annotation:last-of-type::after {
+        content: "";
+        width: 0;
+        height: 0;
+        margin-left: 0.25em;
+        margin-top: 0.1em;
+        position: absolute;
+        border-color: transparent transparent transparent var(--answer-border);
+        border-width: 0.5em;
+        border-style: solid;
+    }
 
 /* Free-form text entry fields */
-.question textarea {
-    width: calc(100% - 0.5em);
-    min-width: calc(100% - 0.5em);
-    max-width: calc(100% - 0.5em);
-    min-height: 1em;
-    padding: 0.5em;
-    margin: 0.5em 0 0 -0.5em;
-    height: 2em;
-    transition: height 0.1s ease-out;
-}
 
-.question textarea:focus {
-    height: 7em;
-    transition: height 0.1s ease-in;
-}
+    .question textarea {
+        width: calc(100% - 0.5em);
+        min-width: calc(100% - 0.5em);
+        max-width: calc(100% - 0.5em);
+        min-height: 1em;
+        padding: 0.5em;
+        margin: 0.5em 0 0 -0.5em;
+        height: 2em;
+        transition: height 0.1s ease-out;
+    }
 
+    .question textarea:focus {
+        height: 7em;
+        transition: height 0.1s ease-in;
+        outline: solid var(--theme-color-1);
+    }
 
+/* The search field at the top of the session list page: */
 
+    body.sessions-page .search {
+        -position: relative;
+        -top: -2em;
+        margin: 2em 0;
+        max-width: 30em;
+        width: 75%;
+        padding: 0.5em 1em 0.5em 1em;
+    }
 
-body.sessions-page {
-    padding-top: 4em;
-    padding-bottom: 1em;
-    text-align: center;
-}
+    body.sessions-page .search:focus {
+        outline-width: 3px;
+        outline-offset: 2px;
+    }
 
-body.sessions-page .search {
-    -position: relative;
-    -top: -2em;
-    margin: 2em 0;
-    max-width: 30em;
-    width: 75%;
-    padding: 0.5em 1em 0.5em 1em;
-}
+    /* Title of a session in the session list page: */
 
-.session .title {
-    display: block;
-}
+    .session .title {
+        display: block;
+    }
 

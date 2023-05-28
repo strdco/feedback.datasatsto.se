@@ -1,135 +1,162 @@
-body {
-    background-image: url('/wesley-tingey--Irs24DzLxM-unsplash.jpg');
-    background-size: cover;
-    background-attachment: fixed;
-}
+/* Theme colors */
 
-img.header-logo {
-    content: url('/data-saturdays.png');
-    width: 150px;
-    height: 150px;
-}
+    html {
+        --background-image: url('/wesley-tingey--Irs24DzLxM-unsplash.jpg');
+        --header-logo-image: url('/data-saturdays.png');
+        --header-logo-width: 150px;
+        --header-logo-height: 150px;
 
-::selection {
-    background: rgb(0, 147, 221);; /* WebKit/Blink Browsers */
-    color: rgb(255, 255, 255);
-}
-::-moz-selection {
-    background: rgb(0, 147, 221);; /* Gecko Browsers */
-    color: rgb(255, 255, 255);
-}
+        --theme-black: rgb(0, 0, 0);
+        --theme-white: rgb(255, 255, 255);
+        --theme-color-1: rgb(0, 147, 221);
+        --theme-border: rgb(50, 65, 71);
 
+        --header-background: rgb(255, 255, 255, 0.65);
 
+        --answer-panel: rgb(236, 236, 236);
+        --answer-border: rgb(192, 192, 192);
 
-.header .title {
-    font-size: 150%;
-    font-weight: bold;
-}
-
-.footer button.done {
-    background-color: rgb(0, 147, 221);
-    color: rgb(255, 255, 255);
-    font-weight: bold;
-    border-radius: 0.5em;
-    border-style: solid;
-    border-width: 1px;
-    border-color: rgb(50, 65, 71);
-}
-
-.footer button.done:hover {
-    background-color: rgb(0, 187, 255);
-}
-
-.footer button.done:active {
-    background-color: rgb(64, 227, 255);
-}
-
-.answers {
-    background-color: rgba(128, 128, 128, 0.15);
-    border-style: solid;
-    border-width: 1px;
-    border-color: rgba(0, 0, 0, 0.20);
-    border-radius: 1em;
-}
-
-
-.annotations {
-    color: rgb(0, 0, 0, 0.75);
-}
-
-.question textarea {
-    border-width: 1px;
-    border-style: solid;
-    border-color: rgba(0, 0, 0, 0.20);
-    font-family: inherit;
-    font-size: inherit;
-}
-
-
-
-
-.question.bad, .question.avg, .question.good {
-    backdrop-filter: blur(1.5em);
-    border-left-width: 4px;
-    border-right-width: 1px;
-    /*border-bottom-color: rgb(255, 255, 255);*/
-    border-style: solid;
-}
-
-.question.bad {
-    border-top-color: rgb(255, 0, 0, 0.75);
-    border-left-color: rgb(255, 0, 0, 0.75);
-    border-right-color: rgb(128, 0, 0, 0.75);
-    border-bottom-color: rgb(128, 0, 0, 0.75);
-}
-
-.question.avg {
-    border-top-color: rgb(255, 200, 0, 0.75);
-    border-left-color: rgb(255, 200, 0, 0.75);
-    border-right-color: rgb(160, 128, 0, 0.75);
-    border-bottom-color: rgb(160, 128, 0, 0.75);
-}
-
-.question.good {
-    border-top-color: rgb(0, 200, 0, 0.75);
-    border-left-color: rgb(0, 200, 0, 0.75);
-    border-right-color: rgb(0, 96, 0, 0.75);
-    border-bottom-color: rgb(0, 96, 0, 0.75);
-}
+        --border-color: rgb(0, 0, 0, 0.5);
+        --dashed-border-color: 
+    }
 
 
 
 
 
 
-body.sessions-page .search {
-    font-size: inherit;
-}
 
-.session .title {
-    font-weight: bold;
-    color: rgb(0, 0, 160);
-    text-decoration: none;
-    text-decoration-color: rgb(0, 0, 0);
-    text-decoration-thickness: 1px;
-}
 
-.session:last-child {
-    border-bottom-style: solid;
-}
 
-.session .title:visited {
-    text-decoration-color: rgb(160, 160, 160);
-    color: rgb(160, 160, 160);
-}
 
-.session .title:hover {
-    color: rgb(00, 192, 0);
-    text-decoration-color: rgb(00, 192, 0);
-    text-decoration-style: dotted;
-}
+/* Styling the page, including font, background image/color, etc: */
 
-.session .speakers {
-    display: block;
-    font-style: italic;
-}
+    body {
+        background-image: var(--background-image);
+        background-size: cover;
+        background-attachment: fixed;
+    }
+
+/* Page header image */
+
+    img.header-logo {
+        content: var(--header-logo-image);
+        width: var(--header-logo-width);
+        height: var(--header-logo-height);
+    }
+
+/* The title of the session */
+
+    .header .title {
+        font-size: 150%;
+        font-weight: bold;
+    }
+
+/* Question cards and answers */
+
+    .answers {
+        background-color: var(--answer-panel);
+        border-style: solid;
+        border-width: 1px;
+        border-color: var(--answer-border);
+        border-radius: 1em;
+    }
+
+
+    .annotations {
+        color: rgb(0, 0, 0, 0.75);
+    }
+
+    .question textarea {
+        border-width: 1px;
+        border-style: solid;
+        border-color: rgba(0, 0, 0, 0.20);
+        font-family: inherit;
+        font-size: inherit;
+    }
+
+    .question.bad, .question.avg, .question.good {
+        backdrop-filter: blur(1.5em);
+        border-left-width: 4px;
+        border-right-width: 1px;
+        border-style: solid;
+    }
+
+    .question.bad {
+        border-top-color: rgb(255, 0, 0, 0.75);
+        border-left-color: rgb(255, 0, 0, 0.75);
+        border-right-color: rgb(128, 0, 0, 0.75);
+        border-bottom-color: rgb(128, 0, 0, 0.75);
+    }
+
+    .question.avg {
+        border-top-color: rgb(255, 200, 0, 0.75);
+        border-left-color: rgb(255, 200, 0, 0.75);
+        border-right-color: rgb(160, 128, 0, 0.75);
+        border-bottom-color: rgb(160, 128, 0, 0.75);
+    }
+
+    .question.good {
+        border-top-color: rgb(0, 200, 0, 0.75);
+        border-left-color: rgb(0, 200, 0, 0.75);
+        border-right-color: rgb(0, 96, 0, 0.75);
+        border-bottom-color: rgb(0, 96, 0, 0.75);
+    }
+
+/* Footer button */
+
+    .footer button.done {
+        background-color: var(--theme-color-1);
+        color: var(--theme-white);
+        font-weight: bold;
+        border-radius: 0.5em;
+        border-style: solid;
+        border-width: 1px;
+        border-color: var(--theme-border);
+    }
+
+    .footer button.done:hover {
+        filter: brightness(125%);
+    }
+
+    .footer button.done:active {
+        filter: brightness(150%);
+    }
+
+/* Session overview */
+
+    body.sessions-page .search {
+        font-size: inherit;
+    }
+
+    .session .title {
+        font-weight: bold;
+        color: var(--theme-color-1);
+        text-decoration: none;
+        text-decoration-color: rgb(0, 0, 0);
+        text-decoration-thickness: 1px;
+    }
+
+    .session:last-child {
+        border-bottom-style: solid;
+    }
+
+    .session .title:visited {
+        text-decoration-color: rgb(160, 160, 160);
+        color: rgb(160, 160, 160);
+    }
+
+    .session .title:hover,
+    .session .title:focus { /*
+        color: rgb(0, 192, 0);
+        text-decoration-color: rgb(0, 192, 0); */
+        filter: brightness(150%);
+        text-decoration-style: dotted;
+        outline: none;
+    }
+
+    .session .speakers {
+        display: block;
+        font-style: italic;
+    }
+

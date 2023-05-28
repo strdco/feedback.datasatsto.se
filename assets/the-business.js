@@ -132,7 +132,7 @@
 
         var button=document.createElement('button');
         button.classList='done';
-        button.innerText='Done.';
+        button.innerText='Done';
         button.addEventListener('click', () => {
             location.href='/sessions?responseId='+encodeURIComponent(responseId)+'&clientKey='+encodeURIComponent(clientKey);
         });

@@ -36,7 +36,7 @@ BEGIN TRANSACTION;
     --- 9.
     INSERT INTO @id (ID) EXECUTE Feedback.Create_Question @Event_ID=@Template_ID, @Question=N'Was the presenter engaging?', @Optimal_percent=100, @Is_required=0, @Has_plaintext=0, @Display_order=9, @Type='radio';
     --- 10.
-    INSERT INTO @id (ID) EXECUTE Feedback.Create_Question @Event_ID=@Template_ID, @Question=N'Feedback to the presenter', @Description='Try to give constructive feedback.', @Is_required=0, @Has_plaintext=8, @Type='text', @Display_order=10;
+    INSERT INTO @id (ID) EXECUTE Feedback.Create_Question @Event_ID=@Template_ID, @Question=N'Feedback to the presenter', @Description='Remember to be constructive with your feedback.', @Is_required=0, @Has_plaintext=8, @Type='text', @Display_order=10;
 
     --- Answers to 1.
     SELECT @Question_ID=ID FROM @id WHERE Seq=1;
