@@ -58,7 +58,39 @@
 
             xhr.send(document.location.search.substring(1));
         }
+
+
+
+
+
+        // If we're on the admin page:
+        if (docPath=='admin') {
+            renderAdminHeader();
+
+            /*
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', '/api/sessions');
+            xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+
+            xhr.onload = function() {
+                if (xhr.status==200) {
+                    const blob=JSON.parse(xhr.response);
+                    renderSessionHeader(blob[0].css);
+                    renderSessionList(blob);
+                }
+            }
+
+            xhr.send(document.location.search.substring(1));
+            */
+        }
+
+
     }
+
+
+
+
+
 
 
 
@@ -87,6 +119,32 @@
     function hideStatus() {
         document.getElementsByClassName('statusbar')[0].classList.add('hidden');
     }
+
+/*
+ *
+ *
+ * These functions are used on the feedback form.
+ * ----------------------------------------------------------------------------
+ * 
+ * 
+ */
+
+function renderAdminHeader() {
+    document.body.classList.add('admin-page');
+    document.title='Admin';
+
+    var input=document.createElement('input');
+    input.classList.add('secret-key');
+    input.placeholder='0000000-0000-0000-0000-000000000000';
+    input.addEventListener("keyup", (e) => {
+        //e.preventDefault();
+        if (e.code=='Enter' && e.target.value) {
+
+        };
+    });
+
+    document.body.appendChild(input);
+}
 
 /*
  *

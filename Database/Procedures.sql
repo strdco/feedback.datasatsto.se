@@ -761,3 +761,41 @@ SELECT (
         ) AS Template_blob;
 
 GO
+
+-------------------------------------------------------------------------------
+---
+--- Retrieve admin information for av event
+---
+-------------------------------------------------------------------------------
+
+CREATE OR ALTER PROCEDURE Feedback.Admin_Event_Info
+    @Event_secret       uniqueidentifier
+AS
+
+SET NOCOUNT ON;
+
+SELECT e.Event_ID AS eventId,
+       e.[Name] AS [name],
+       e.CSS AS css,
+       (SELECT s.Session_ID AS sessionId,
+               s.Title AS title,
+               e.CSS AS css,
+
+               --- Presenters:
+               (SELECT p.[Name] AS [name]
+                   FROM Feedback.Session_Presenters AS sp
+                   INNER JOIN Feedback.Presenters AS p ON sp.Presented_by_ID=p.Presenter_ID
+                   WHERE sp.Session_ID=s.Session_ID
+                   ORDER BY p.[Name]
+                   FOR JSON PATH) AS presenters
+           FROM Feedback.[Sessions] AS s
+           INNER JOIN Feedback.Events AS e ON s.Event_ID=e.Event_ID
+           WHERE s.Event_ID=e.Event_ID
+           ORDER BY s.Title
+           FOR JSON PATH
+           ) AS [sessions]
+FROM Feedback.[Events] AS e
+WHERE e.Event_secret=@Event_secret
+FOR JSON PATH, WITHOUT_ARRAY_WRAPPER;
+
+GO

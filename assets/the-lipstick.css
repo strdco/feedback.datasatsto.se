@@ -29,7 +29,8 @@ html {
         margin: 0;
     }
 
-    body.sessions-page {
+    body.sessions-page,
+    body.admin-page {
         padding-top: 4em;
         padding-bottom: 1em;
         text-align: center;
@@ -369,7 +370,8 @@ html {
         outline: solid var(--theme-color-1);
     }
 
-    .question input,
+    .question input:not([type]),
+    .question input[type="text"],
     .question select {
         width: calc(100% - 0.5em);
         min-width: calc(100% - 0.5em);
@@ -378,16 +380,19 @@ html {
         margin: 0.5em 0 0 -0.5em;
     }
     
-/* The search field at the top of the session list page: */
+/* The search field at the top of the session list page,
+   but also the "secret key" entry field on the admin page. */
 
-    body.sessions-page .search {
+    body.sessions-page .search,
+    body.admin-page .secret-key {
         margin: 2em 0;
         max-width: 30em;
         width: 75%;
         padding: 0.5em 1em 0.5em 1em;
     }
 
-    body.sessions-page .search:focus {
+    body.sessions-page .search:focus,
+    body.admin-page .secret-key:focus {
         outline-width: 3px;
         outline-offset: 2px;
     }

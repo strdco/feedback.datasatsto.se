@@ -146,7 +146,11 @@ app.post('/api/sessions', async function (req, res, next) {
     var responseId=parseInt(req.body.responseId);
     var clientKey=req.body.clientKey;
 
-    res.status(200).send(await listSessions(responseId, clientKey));
+    try {
+        res.status(200).send(await listSessions(responseId, clientKey));
+    } catch(e) {
+        res.status(401).send();
+    }
 });
 
 
@@ -179,6 +183,50 @@ app.get('/api/create-response/:sessionid', async function (req, res, next) {
 });
 
 
+/*-----------------------------------------------------------------------------
+  Admin page
+  ---------------------------------------------------------------------------*/
+
+app.get('/admin', function(req, res, next) {
+    httpHeaders(res);
+
+    res.status(200).sendFile('template.html', sendFileOptions('/', 60 * 60 * 1000), function(err) {
+        if (err) {
+            res.sendStatus(404);
+            return;
+        }
+    });
+
+    return;
+});
+
+app.post('/api/get-admin-sessions', async function (req, res, next) {
+
+    var eventSecret=req.body.eventSecret.trim();
+    var blob;
+    try {
+        blob=await adminEventInfo(eventSecret);
+        res.status(200).send(blob);
+    } catch(e) {
+        res.status(401).send();
+    }
+
+});
+
+// Send the QR code for this 
+app.get('/qr/:sessionid([0-9]*)', async function (req, res, next) {
+    res.status(200).send('TODO');
+});
+
+
+
+/*-----------------------------------------------------------------------------
+  Admin page
+  ---------------------------------------------------------------------------*/
+
+app.get('/data/:secretkey', function(req, res, next) {
+    res.status(200).send('TODO');
+});
 
 
 /*-----------------------------------------------------------------------------
@@ -264,7 +312,6 @@ app.post('/api/import-sessionize', async function (req, res, next) {
     }
 
     res.status(200).send(event);
-    //console.log(sessions);
 
 });
 
@@ -436,6 +483,8 @@ async function createEvent(name, apikey, templateName) {
                 var eventId=recordset.data[0].Event_ID;
                 var eventSecret=recordset.data[0].Event_secret;
 
+console.log('recordset', { "eventId": eventId, "eventSecret": eventSecret });
+
                 resolve({ "eventId": eventId, "eventSecret": eventSecret });
             });
         });
@@ -529,8 +578,12 @@ async function listSessions(responseId, clientKey) {
             [   { "name": 'responseId',     "type": cannedSql.Types.Int,                "value": responseId },
                 { "name": 'clientKey',      "type": cannedSql.Types.UniqueIdentifier,   "value": clientKey }],
             function(recordset) {
-                var blob = JSON.parse(recordset.data[0].Sessions_blob);
-                resolve(blob);
+                try {
+                    var blob = JSON.parse(recordset.data[0].Sessions_blob);
+                    resolve(blob);
+                } catch(e) {
+                    reject();
+                }
             });
         });
 }
@@ -547,3 +600,21 @@ async function listTemplates(responseId, clientKey) {
             });
         });
 }
+
+async function adminEventInfo(eventSecret) {
+
+    return new Promise((resolve, reject) => {
+        cannedSql.sqlQuery(connectionString,
+            'EXECUTE Feedback.Admin_Event_Info @Event_secret=@eventSecret;',
+            [ { "name": 'eventSecret', "type": cannedSql.Types.UniqueIdentifier, "value": eventSecret } ],
+            function(recordset) {
+                try {
+                    var blob = JSON.parse(recordset.data[0].Event_blob);
+                    resolve(blob);
+                } catch(e) {
+                    reject();
+                }
+            });
+        });
+}
+
