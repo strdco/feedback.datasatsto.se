@@ -1,8 +1,11 @@
     var clientKey;
     var responseId;
     var statusTimeoutId;
+    var searchTimeout;
 
     window.onload = function whatsUp() {
+
+        const docPath=document.location.pathname.substring(1);
 
         // Create the status bar
         var statusbarDiv=document.createElement('div');
@@ -10,20 +13,21 @@
         statusbarDiv.classList.add('hidden');
         document.body.appendChild(statusbarDiv);
 
-        // If the path is entirely numeric, we're reviewing a session:
-        var docPath=document.location.pathname.substring(1);
-        if (isFinite(docPath) && docPath!='') {
 
+
+        // If the path is entirely numeric, we're reviewing a session:
+        if (isFinite(docPath) && docPath!='') {
             var xhr = new XMLHttpRequest();
 
             xhr.onload = function() {
                 if (xhr.status == 200) {
                     try {
-                        var blob=JSON.parse(xhr.response);
+                        const blob=JSON.parse(xhr.response);
                         clientKey = blob.clientKey;
                         responseId = blob.responseId;
                         renderHeader(blob);
                         renderQuestions(blob.questions);
+                        renderFooter();
                     } catch(err) {
                         // TODO
                         console.log(err);
@@ -34,7 +38,28 @@
             xhr.open('GET', '/api/create-response/'+docPath);
             xhr.send();
         }
+
+
+
+        // If we're selecting a session to review:
+        if (docPath=='sessions') {
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', '/api/sessions');
+            xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+
+            xhr.onload = function() {
+                if (xhr.status==200) {
+                    const blob=JSON.parse(xhr.response);
+                    renderSessionHeader(blob[0].css);
+                    renderSessionList(blob);
+                }
+            }
+
+            xhr.send(document.location.search.substring(1));
+        }
     }
+
+
 
     function showStatus(statusText, cssClass) {
         // If already visible, cancel the scheduled fade-out.
@@ -62,10 +87,19 @@
         document.getElementsByClassName('statusbar')[0].classList.add('hidden');
     }
 
-
-
+/*
+ *
+ *
+ * These functions are used on the feedback form.
+ * ----------------------------------------------------------------------------
+ * 
+ * 
+ */
 
     function renderHeader(blob) {
+        document.body.classList.add('review-page');
+        document.title='Feedback: '+blob.title;
+
         var header=document.createElement('div');
         header.classList.add('header');
 
@@ -73,6 +107,13 @@
         title.classList.add('title');
         title.innerText=blob.title;
         header.appendChild(title);
+
+        if (blob.css) {
+            var l=document.createElement('link');
+            l.rel='stylesheet';
+            l.href=blob.css;
+            document.head.appendChild(l);
+        }
 
         var speakers=document.createElement('ul');
         speakers.classList.add('speakers');
@@ -85,31 +126,54 @@
         document.body.appendChild(header);
     }
 
+    function renderFooter() {
+        var footer=document.createElement('div');
+        footer.classList='footer';
+
+        var button=document.createElement('button');
+        button.classList='done';
+        button.innerText='Done.';
+        button.addEventListener('click', () => {
+            location.href='/sessions?responseId='+encodeURIComponent(responseId)+'&clientKey='+encodeURIComponent(clientKey);
+        });
+        footer.appendChild(button);
+
+        document.body.appendChild(footer);
+    }
+
     function renderQuestions(questions) {
-        /*
-        *
-        * Render question divs.
-        *
-        */
 
         questions.forEach(q => {
+
+            // The question DIV
             var qdiv=document.createElement('div');
             qdiv.classList.add('question');
             if (q.isRequired) { qdiv.classList.add('required'); }
             if (q.hasPercentages) { qdiv.classList.add('has-percentages'); }
+            if (q.display==false) { qdiv.classList.add('hidden'); }
             qdiv.id='question'+q.questionId;
+
+            // Indent this question DIV?
+            if (q.indent) {
+                qdiv.classList.add('indented');
+                qdiv.style.top=-0.25*q.indent+'em';
+                qdiv.style.left=0.5*q.indent+'em';
+            }
+
+            // Create the title of the question
             var span=document.createElement('span');
             span.innerText=q.question;
             span.classList.add('question-text');
             qdiv.appendChild(span);
+
+            // If the question has a description text
+            // (except if it's purely a text field)
             if (q.type!='text' && q.description) {
                 var span2=document.createElement('span');
                 span2.innerText=q.description;
                 span2.classList.add('question-description');
                 qdiv.appendChild(span2);
             }
-            if (q.display==false) { qdiv.style.display='none'; }
-
 
             // If there are answer options, render those
             if (q.options) {
@@ -149,7 +213,8 @@
                     // that question when the option is clicked.
                     if (a.followUpQuestionId) {
                         opt.addEventListener('click', () => {
-                            document.querySelector('div#question'+a.followUpQuestionId).style.display='block';
+                            var followUp=document.querySelector('div#question'+a.followUpQuestionId);
+                            followUp.classList.remove('hidden');
                         });
                     }
 
@@ -198,14 +263,6 @@
                     txtArea.placeholder='Use this field to elaborate.';
                 }
                 qdiv.appendChild(txtArea);
-                txtArea.addEventListener('focus', () => {
-                    txtArea.style.height='4em';
-                });
-                txtArea.addEventListener('blur', () => {
-                    if (txtArea.value=='') {
-                        txtArea.style.height='inherit';
-                    }
-                });
                 txtArea.addEventListener('change', () => {
                     saveInput(q.questionId, null, txtArea.value);
                 });
@@ -238,3 +295,74 @@
         xhr.send(postBody);
     }
 
+
+/*
+ *
+ *
+ * These functions are used for the session listing page.
+ * ----------------------------------------------------------------------------
+ * 
+ * 
+ */
+
+    // Create the header and search field for the session list:
+    function renderSessionHeader(css) {
+        document.body.classList.add('sessions-page');
+
+        if (css) {
+            var l=document.createElement('link');
+            l.rel='stylesheet';
+            l.href=css;
+            document.head.appendChild(l);
+        }
+
+        var search=document.createElement('input');
+        search.classList.add('search');
+        search.placeholder='Search sessions...';
+
+        search.addEventListener("change", searchChangedEvent);
+        search.addEventListener("keyup", searchChangedEvent);
+
+        document.body.appendChild(search);
+    }
+
+    // Render the list of all sessions for this event:
+    function renderSessionList(sessions) {
+        for (var session of sessions) {
+            var div=document.createElement('div');
+            div.classList.add('session');
+
+            var title=document.createElement('a');
+            title.classList.add('title');
+            title.href='/'+session.sessionId;
+            title.innerText=session.title;
+
+            var speakers=document.createElement('span');
+            speakers.classList.add('speakers');
+            speakers.innerText=session.presenters.map(presenter => { return(presenter.name); }).join(', ');
+
+            div.appendChild(title);
+            div.appendChild(speakers);
+
+            document.body.appendChild(div);
+        }
+    }
+
+    // Wait 500 ms after last keypress before we search
+    function searchChangedEvent(e) {
+        clearTimeout(searchTimeout);
+        searchTimeout=setTimeout(filterSessionList, 500);
+    }
+
+    function filterSessionList() {
+        var filterString=document.getElementsByClassName('search')[0].value.toLowerCase();
+        var sessionDivs=Array.from(document.getElementsByClassName('session'));
+
+        sessionDivs.forEach(div => {
+            if (div.innerText.toLowerCase().indexOf(filterString)>=0) {
+                div.classList.remove('hidden');
+            } else {
+                div.classList.add('hidden');
+            }
+        })
+    }

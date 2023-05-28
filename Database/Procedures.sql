@@ -92,8 +92,8 @@ IF (@From_template_Event_ID IS NOT NULL) BEGIN;
         new.Event_ID=-1
 
     WHEN NOT MATCHED BY TARGET THEN
-        INSERT (Event_ID, Display_order, Question, [Description], Is_required, [Type], Has_plaintext)
-        VALUES ((SELECT Event_ID FROM @event), Display_order, Question, [Description], Is_required, [Type], Has_plaintext)
+        INSERT (Event_ID, Display_order, Question, [Description], Optimal_percent, Is_required, [Type], Has_plaintext)
+        VALUES ((SELECT Event_ID FROM @event), Display_order, Question, [Description], Optimal_percent, Is_required, [Type], Has_plaintext)
 
     OUTPUT old.Question_ID, inserted.Question_ID
     INTO @questions (Question_ID, New_Question_ID);
@@ -143,15 +143,15 @@ BEGIN TRANSACTION;
 
     --- Event -> Sessions -> Responses -> Response plaintext
     DELETE FROM Feedback.Response_Plaintext
-    WHERE Response_ID IN (SELECT Response_ID FROM Feedback.Responses WHERE Session_ID IN (SELECT Session_ID FROM Feedback.Sessions WHERE Event_ID=@Event_ID));
+    WHERE Response_ID IN (SELECT Response_ID FROM Feedback.Responses WHERE Session_ID IN (SELECT Session_ID FROM Feedback.[Sessions] WHERE Event_ID=@Event_ID));
 
     --- Event -> Sessions -> Responses -> Response answers
     DELETE FROM Feedback.Response_Answers
-    WHERE Response_ID IN (SELECT Response_ID FROM Feedback.Responses WHERE Session_ID IN (SELECT Session_ID FROM Feedback.Sessions WHERE Event_ID=@Event_ID));
+    WHERE Response_ID IN (SELECT Response_ID FROM Feedback.Responses WHERE Session_ID IN (SELECT Session_ID FROM Feedback.[Sessions] WHERE Event_ID=@Event_ID));
 
     --- Event -> Sessions -> Responses
     DELETE FROM Feedback.Responses
-    WHERE Session_ID IN (SELECT Session_ID FROM Feedback.Sessions WHERE Event_ID=@Event_ID);
+    WHERE Session_ID IN (SELECT Session_ID FROM Feedback.[Sessions] WHERE Event_ID=@Event_ID);
 
     --- Event -> Questions -> Answer options
     DELETE FROM Feedback.Answer_options
@@ -163,14 +163,14 @@ BEGIN TRANSACTION;
 
     --- Event -> Sessions -> Session presenters
     DELETE FROM Feedback.Session_presenters
-    WHERE Session_ID IN (SELECT Session_ID FROM Feedback.Sessions WHERE Event_ID=@Event_ID);
+    WHERE Session_ID IN (SELECT Session_ID FROM Feedback.[Sessions] WHERE Event_ID=@Event_ID);
 
     --- Presenters that do not feature in any session anymore
     DELETE FROM Feedback.Presenters
     WHERE Presenter_ID NOT IN (SELECT Presented_by_ID FROM Feedback.Session_presenters);
 
     --- Event -> Sessions
-    DELETE FROM Feedback.Sessions
+    DELETE FROM Feedback.[Sessions]
     WHERE Event_ID=@Event_ID;
 
     --- Event
@@ -233,7 +233,7 @@ IF (NOT EXISTS (SELECT NULL FROM Feedback.My_Events WHERE Event_ID=@Event_ID))
 
 --- Create a new session:
 IF (@Sessionize_id IS NULL)
-    INSERT INTO Feedback.Sessions (Event_ID, Title)
+    INSERT INTO Feedback.[Sessions] (Event_ID, Title)
     OUTPUT inserted.Session_ID
     VALUES (@Event_ID, @Title);
 
@@ -244,11 +244,11 @@ IF (@Sessionize_id IS NOT NULL) BEGIN;
     --- for the session. Don't worry, though. We'll add them back in a moment.
     DELETE sp
     FROM Feedback.Session_Presenters AS sp
-    INNER JOIN Feedback.Sessions AS s ON sp.Session_ID=s.Session_ID
+    INNER JOIN Feedback.[Sessions] AS s ON sp.Session_ID=s.Session_ID
     WHERE s.Sessionize_id=@Sessionize_id
       AND s.Event_ID=@Event_ID;
 
-    MERGE INTO Feedback.Sessions AS s
+    MERGE INTO Feedback.[Sessions] AS s
     USING (SELECT NULL AS n) AS x ON s.Sessionize_id=@Sessionize_id AND s.Event_ID=@Event_ID
 
     WHEN MATCHED THEN
@@ -316,6 +316,7 @@ CREATE OR ALTER PROCEDURE Feedback.Create_Question
     @Display_order   tinyint=NULL,
     @Question        nvarchar(200),
     @Description     nvarchar(max)=NULL,
+    @Optimal_percent smallint=NULL,
     @Is_required     bit=0,
     @Type            varchar(20)='radio',
     @Has_plaintext   bit=0
@@ -344,9 +345,9 @@ BEGIN TRANSACTION;
           AND Display_order>=@Display_order;
 
     --- Add the question
-    INSERT INTO Feedback.Questions (Event_ID, Display_order, Question, [Description], Is_required, [Type], Has_plaintext)
+    INSERT INTO Feedback.Questions (Event_ID, Display_order, Question, [Description], Optimal_percent, Is_required, [Type], Has_plaintext)
     OUTPUT inserted.Question_ID
-    VALUES (@Event_ID, @Display_order, @Question, @Description, @Is_required, @Type, @Has_plaintext);
+    VALUES (@Event_ID, @Display_order, @Question, @Description, @Optimal_percent, @Is_required, @Type, @Has_plaintext);
 
     --- Pack the Display_order in case we've created gaps
     UPDATE q
@@ -373,6 +374,7 @@ CREATE OR ALTER PROCEDURE Feedback.Update_Question
     @Display_order   tinyint=NULL,
     @Question        nvarchar(200)=NULL,
     @Description     nvarchar(max)=NULL,
+    @Optimal_percent smallint=NULL,
     @Is_required     bit=NULL,
     @Type            varchar(20)=NULL,
     @Has_plaintext   bit=NULL
@@ -403,6 +405,7 @@ BEGIN TRANSACTION;
     SET Display_order=ISNULL(@Display_order, Display_order),
         Question=ISNULL(@Question, Question),
         [Description]=ISNULL(@Description, [Description]),
+        Optimal_percent=ISNULL(@Optimal_percent, Optimal_percent),
         Is_required=ISNULL(@Is_required, Is_required),
         [Type]=ISNULL(@Type, [Type]),
         Has_plaintext=ISNULL(@Has_plaintext, Has_plaintext)
@@ -468,7 +471,7 @@ GO
 CREATE OR ALTER PROCEDURE Feedback.Create_Answer_option
     @Question_ID                int,
     @Answer_ordinal             smallint=NULL,
-    @Percent_value              tinyint=NULL,
+    @Percent_value              smallint=NULL,
     @If_selected_show_Question_ID int=NULL,
     @Annotation                 nvarchar(200)=NULL,
     @CSS_classes                nvarchar(200)=NULL
@@ -533,7 +536,7 @@ DECLARE @id TABLE (
 INSERT INTO Feedback.Responses (Session_ID, Created, Updated)
 OUTPUT inserted.Client_key, inserted.Response_ID INTO @id (Client_key, Response_ID)
 SELECT s.Session_ID, SYSUTCDATETIME() AS Created, SYSUTCDATETIME() AS Created
-FROM Feedback.Sessions AS s
+FROM Feedback.[Sessions] AS s
 INNER JOIN Feedback.Events AS e ON s.Event_ID=e.Event_ID
 WHERE s.Session_ID=@Session_ID
   AND ISNULL(e.Accepts_responses_from, {d '2000-01-01'})<SYSDATETIME()
@@ -544,25 +547,31 @@ IF (@@ROWCOUNT=0) BEGIN;
     RETURN;
 END;
 
-SELECT (SELECT (SELECT Client_key FROM @id) AS clientKey,
-               (SELECT Response_ID FROM @id) AS responseId,
-               (SELECT Title
-                FROM Feedback.Sessions
-                WHERE Session_ID=@Session_ID) AS title,
+SELECT (SELECT id.Client_key AS clientKey,
+               id.Response_ID AS responseId,
+               e.CSS AS css,
+               s.Title AS title,
+
+               --- Presenters:
                (SELECT p.Name AS [name]
                 FROM Feedback.Session_Presenters AS sp
                 INNER JOIN Feedback.Presenters AS p ON sp.Presented_by_ID=p.Presenter_ID
                 WHERE sp.Session_ID=@Session_ID
                 ORDER BY sp.Is_session_owner DESC, p.Name
                 FOR JSON PATH) AS speakers,
+
+               --- Questions:
                (SELECT q.Question AS question,
                        q.[Description] AS [description],
                        q.Question_ID AS questionId,
                        q.Is_required AS isRequired,
+                       ISNULL(i.Indent, 0) AS indent,
                        CAST((CASE WHEN linked.Question_ID IS NULL THEN 1 ELSE 0 END) AS bit) AS display,
                        q.[Type] AS [type],
                        CAST((CASE WHEN q.Has_plaintext=1 OR q.[Type]='text' THEN 1 ELSE 0 END) AS bit) AS allowPlaintext,
                        CAST((CASE WHEN opts.Percentage_count>0 THEN 1 ELSE 0 END) AS bit) AS hasPercentages,
+
+                       --- Answer options to the question:
                        (SELECT ao.Answer_ordinal AS answer_ordinal,
                                ao.Annotation AS annotation,
                                ao.If_selected_show_Question_ID AS followUpQuestionId,
@@ -572,7 +581,7 @@ SELECT (SELECT (SELECT Client_key FROM @id) AS clientKey,
                         ORDER BY ao.Answer_ordinal
                         FOR JSON PATH) AS options
                 FROM Feedback.Questions AS q
-                INNER JOIN Feedback.Sessions AS s ON q.Event_ID=s.Event_ID
+                LEFT JOIN Feedback.Question_Indent AS i ON q.Question_ID=i.Question_ID
                 LEFT JOIN (
                     SELECT DISTINCT If_selected_show_Question_ID AS Question_ID
                     FROM Feedback.Answer_options
@@ -582,9 +591,14 @@ SELECT (SELECT (SELECT Client_key FROM @id) AS clientKey,
                     FROM Feedback.Answer_options
                     GROUP BY Question_ID
                     ) AS opts ON opts.Question_ID=q.Question_ID
-                WHERE s.Session_ID=@Session_ID
+                WHERE q.Event_ID=e.Event_ID
                 ORDER BY q.Display_order
                 FOR JSON PATH) AS questions
+
+        FROM Feedback.[Sessions] AS s
+        INNER JOIN Feedback.[Events] AS e ON s.Event_ID=e.Event_ID
+        CROSS JOIN @id AS id
+        WHERE s.Session_ID=@Session_ID
         FOR JSON PATH, WITHOUT_ARRAY_WRAPPER
         ) AS Question_blob;
 
@@ -597,7 +611,7 @@ GO
 -------------------------------------------------------------------------------
 
 CREATE OR ALTER PROCEDURE Feedback.Save_Response_Answer
-    @Response_ID            bigint,
+    @Response_ID            int,
     @Client_key             uniqueidentifier,
     @Question_ID            int,
     @Answer_ordinal         smallint=NULL,
@@ -605,9 +619,6 @@ CREATE OR ALTER PROCEDURE Feedback.Save_Response_Answer
 AS
 
 SET NOCOUNT ON;
-
-SELECT 1/COUNT(*) FROM Feedback.Responses WHERE 1=0;
-RETURN;
 
 BEGIN TRANSACTION;
 
@@ -629,7 +640,7 @@ BEGIN TRANSACTION;
         WITH x AS (
             SELECT q.[Type], ao.Answer_option_ID
             FROM Feedback.Responses AS r
-            INNER JOIN Feedback.Sessions AS s ON r.Session_ID=s.Session_ID
+            INNER JOIN Feedback.[Sessions] AS s ON r.Session_ID=s.Session_ID
             INNER JOIN Feedback.Questions AS q ON s.Event_ID=q.Event_ID
             INNER JOIN Feedback.Answer_options AS ao ON q.Question_ID=ao.Question_ID
             WHERE r.Response_ID=@Response_ID
@@ -660,7 +671,7 @@ BEGIN TRANSACTION;
         WITH x AS (
             SELECT NULL AS n --r.Response_ID, q.Question_ID, @Plaintext AS Plaintext
             FROM Feedback.Responses AS r
-            INNER JOIN Feedback.Sessions AS s ON r.Session_ID=s.Session_ID
+            INNER JOIN Feedback.[Sessions] AS s ON r.Session_ID=s.Session_ID
             INNER JOIN Feedback.Questions AS q ON s.Event_ID=q.Event_ID
             WHERE r.Response_ID=@Response_ID
               AND r.Client_key=@Client_key
@@ -687,5 +698,42 @@ BEGIN TRANSACTION;
     WHERE Response_ID=@Response_ID;
 
 COMMIT TRANSACTION;
+
+GO
+
+-------------------------------------------------------------------------------
+---
+--- List other sessions for this event (when we've already reviewed a session)
+---
+-------------------------------------------------------------------------------
+
+CREATE OR ALTER PROCEDURE Feedback.Get_Sessions
+    @Response_ID            int,
+    @Client_key             uniqueidentifier
+AS
+
+SET NOCOUNT ON;
+
+SELECT (SELECT s.Session_ID AS sessionId,
+               s.Title AS title,
+               e.CSS AS css,
+
+               --- Presenters:
+               (SELECT p.[Name] AS [name]
+                   FROM Feedback.Session_Presenters AS sp
+                   INNER JOIN Feedback.Presenters AS p ON sp.Presented_by_ID=p.Presenter_ID
+                   WHERE sp.Session_ID=s.Session_ID
+                   ORDER BY p.[Name]
+                   FOR JSON PATH) AS presenters
+           FROM Feedback.[Sessions] AS s
+           INNER JOIN Feedback.Events AS e ON s.Event_ID=e.Event_ID
+           WHERE s.Event_ID=(SELECT s.Event_ID
+                               FROM Feedback.Responses AS r
+                               INNER JOIN Feedback.[Sessions] AS s ON r.Session_ID=s.Session_ID
+                               WHERE r.Response_ID=@Response_ID
+                                 AND r.Client_key=@Client_key)
+           ORDER BY s.Title
+           FOR JSON PATH
+           ) AS Sessions_blob;
 
 GO

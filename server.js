@@ -120,7 +120,40 @@ app.get('/', function (req, res, next) {
 });
 
 
+/*-----------------------------------------------------------------------------
+  List sessions
+  ---------------------------------------------------------------------------*/
 
+app.get('/sessions', function(req, res, next) {
+    httpHeaders(res);
+
+    var options = {
+        root: __dirname + '/',
+        dotfiles: 'deny',
+        headers: {
+            'x-timestamp': Date.now(),
+            'x-sent': true
+        }
+    };
+
+    res.status(200).sendFile('template.html', options, function(err) {
+        if (err) {
+            res.sendStatus(404);
+            return;
+        }
+    });
+
+    return;
+});
+
+app.post('/api/sessions', async function (req, res, next) {
+    httpHeaders(res);
+
+    var responseId=parseInt(req.body.responseId);
+    var clientKey=req.body.clientKey;
+
+    res.status(200).send(await listSessions(responseId, clientKey));
+});
 
 
 /*-----------------------------------------------------------------------------
@@ -139,7 +172,7 @@ app.get('/:sessionid([0-9]*)', function (req, res, next) {
         }
     };
 
-    res.status(200).sendFile('review-session.html', options, function(err) {
+    res.status(200).sendFile('template.html', options, function(err) {
         if (err) {
             res.sendStatus(404);
             return;
@@ -465,6 +498,21 @@ async function saveResponse(responseId, clientKey, questionId, answerOrdinal, pl
                 { "name": 'plaintext',      "type": cannedSql.Types.NVarChar,           "value": plaintext }],
             function(recordset) {
                 resolve(recordset);
+            });
+        });
+}
+
+async function listSessions(responseId, clientKey) {
+
+    return new Promise((resolve, reject) => {
+        cannedSql.sqlQuery(connectionString,
+            'EXECUTE Feedback.Get_Sessions '+
+                    '@Response_ID=@responseId, @Client_key=@clientKey;',
+            [   { "name": 'responseId',     "type": cannedSql.Types.Int,                "value": responseId },
+                { "name": 'clientKey',      "type": cannedSql.Types.UniqueIdentifier,   "value": clientKey }],
+            function(recordset) {
+                var blob = JSON.parse(recordset.data[0].Sessions_blob);
+                resolve(blob);
             });
         });
 }

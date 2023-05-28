@@ -1,6 +1,7 @@
 IF (SCHEMA_ID('Feedback') IS NULL)
     EXEC('CREATE SCHEMA Feedback;');
 GO
+DROP VIEW IF EXISTS Feedback.Question_Indent;
 DROP VIEW IF EXISTS Feedback.My_Answer_Options;
 DROP VIEW IF EXISTS Feedback.My_Questions;
 DROP VIEW IF EXISTS Feedback.My_Sessions;
@@ -99,14 +100,15 @@ CREATE UNIQUE INDEX IX_Session_owner
 -------------------------------------------------
 
 CREATE TABLE Feedback.Questions (
-    Question_ID     int CONSTRAINT DF_Questions_ID DEFAULT (NEXT VALUE FOR Feedback.ID) NOT NULL,
-    Event_ID        int NOT NULL,
-    Display_order   tinyint NOT NULL,
-    Question        nvarchar(200) NOT NULL,
-    [Description]   nvarchar(max) NULL,
-    Is_required     bit NOT NULL,
-    [Type]          varchar(20) NOT NULL,
-    Has_plaintext   bit NOT NULL,
+    Question_ID         int CONSTRAINT DF_Questions_ID DEFAULT (NEXT VALUE FOR Feedback.ID) NOT NULL,
+    Event_ID            int NOT NULL,
+    Display_order       tinyint NOT NULL,
+    Question            nvarchar(200) NOT NULL,
+    [Description]       nvarchar(max) NULL,
+    Optimal_percent     smallint NULL,
+    Is_required         bit NOT NULL,
+    [Type]              varchar(20) NOT NULL,
+    Has_plaintext       bit NOT NULL,
     CONSTRAINT PK_Questions PRIMARY KEY CLUSTERED (Question_ID),
     CONSTRAINT UQ_Questions UNIQUE (Event_ID, Display_order),
     CONSTRAINT CK_Questions_Type CHECK ([Type] IN ('checkbox', 'radio', 'text')),
@@ -120,13 +122,13 @@ CREATE TABLE Feedback.Answer_options (
     Question_ID         int NOT NULL,
     Answer_option_ID    int CONSTRAINT DF_Answer_option_ID DEFAULT (NEXT VALUE FOR Feedback.ID) NOT NULL,
     Answer_ordinal      smallint NOT NULL,
-    Percent_value       tinyint NULL,
+    Percent_value       smallint NULL,
     If_selected_show_Question_ID int NULL,
     Annotation          nvarchar(200) NULL,
     CSS_classes         nvarchar(200) NULL,
     CONSTRAINT PK_Answer_options PRIMARY KEY CLUSTERED (Answer_option_ID),
     CONSTRAINT UQ_Answer_options UNIQUE (Question_ID, Answer_ordinal),
-    CONSTRAINT CK_Answer_options_Percent_value CHECK (ISNULL(Percent_value, 0) BETWEEN 0 AND 100),
+    CONSTRAINT CK_Answer_options_Percent_value CHECK (ISNULL(Percent_value, 0) BETWEEN -100 AND 100),
     CONSTRAINT FK_Answer_options_Question FOREIGN KEY (Question_ID) REFERENCES Feedback.Questions (Question_ID),
     CONSTRAINT FK_Answer_options_If_selected_Question FOREIGN KEY (If_selected_show_Question_ID) REFERENCES Feedback.Questions (Question_ID)
 );
@@ -215,3 +217,27 @@ INNER JOIN Feedback.Questions AS q ON e.Event_ID=q.Event_ID
 INNER JOIN Feedback.Answer_options AS a ON q.Question_ID=a.Question_ID
 
 GO
+CREATE OR ALTER VIEW Feedback.Question_Indent
+WITH SCHEMABINDING
+AS
+
+WITH cte AS (
+    SELECT Question_ID, 0 AS Indent, If_selected_show_Question_ID
+    FROM Feedback.Answer_options
+    WHERE Question_ID NOT IN (
+        SELECT If_selected_show_Question_ID
+        FROM Feedback.Answer_options
+        WHERE If_selected_show_Question_ID IS NOT NULL)
+
+    UNION ALL
+
+    SELECT ao.Question_ID, cte.Indent+1, ao.If_selected_show_Question_ID
+    FROM cte
+    INNER JOIN Feedback.Answer_options AS ao ON cte.If_selected_show_Question_ID=ao.Question_ID)
+
+SELECT Question_ID, MAX(Indent) AS Indent
+FROM cte
+GROUP BY Question_ID
+
+GO
+

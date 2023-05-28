@@ -1,9 +1,12 @@
 body {
-    background-image: url('/wesley-tingey--Irs24DzLxM-unsplash.jpg');
-    background-size: cover;
-    background-attachment: fixed;
+    background-color: rgb(224, 224, 224);
     font-family: "Helvetica Neue", "Helvetica", "Arial", "sans-serif";
     margin: 0;
+}
+
+img.header-logo {
+    display: block;
+    margin: auto;
 }
 
 .statusbar {
@@ -16,8 +19,8 @@ body {
     border-bottom-right-radius: 0.5em;
     font-size: 0.85em;
     position: fixed;
-    margin-left: 0;
-    padding: 0.5em 3em 0.5em 3em;
+    margin: auto;
+    padding: 1em 4em 1em 4em;
     top: 0.5em;
     z-index: 100;
     opacity: 1.0;
@@ -43,11 +46,17 @@ body {
     border-color: rgb(220, 128, 128, 0.75);
 }
 
-.header, .question {
-    padding: 1em;
+
+
+
+
+
+
+.header, .question, .footer, .session {
+    padding: 2em 1em;
     max-width: 30em;
     min-height: 2em;
-    margin: auto;
+    margin: 0 auto; /* center div horizontally */
     border-style: none solid dashed solid;
     border-width: 1px;
     border-color: rgb(0, 0, 0, 0.5);
@@ -60,64 +69,84 @@ body {
     border-top-style: solid;
 }
 
-.header .title {
-    font-size: 150%;
-    font-weight: bold;
+.header ul.speakers {
+    padding-inline-start: 0;
 }
 
 .header ul.speakers li {
     display: block;
 }
 
-.question {
-    background-color: rgba(255, 255, 255, 0.85);
+.footer {
+    text-align: center;
+    border-style: none;
+}
+
+.footer button.done {
+    padding: 1em 4em;
+}
+
+
+.question, .session {
+    background-color: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(0.25em);
     border-bottom-color: rgb(200, 200, 200);
     border-bottom-width: 1px;
+}
+
+.question.indented {
+    position: relative;
+    border-top-style: solid;
+    border-bottom-style: solid;
+    border-top-left-radius: 0.5em;
+    filter: drop-shadow(-0.1em 0.25em 0.5rem rgb(64, 64, 64, 0.25));
+}
+
+.question.hidden, .session.hidden {
+    display: none;
 }
 
 .question:first-child {
     border-top-style: solid;
 }
 
-.question:last-child {
+.question:last-child,
+.session:last-child {
     border-bottom-style: solid;
     border-bottom-color: rgb(0 0, 0, 0.5);
     border-bottom-right-radius: 1em;
 }
 
-.question span.question-text {
+.question .question-text {
     display: block;
     font-weight: bold;
     padding: 1em 0 0 0;
 }
 
-.question.required span.question-text::after {
+.question.required .question-text::after {
     content: "*";
     color: rgb(255, 0, 0);
     margin-left: 0.25em;
 }
 
-.question span.question-description {
+.question .question-description {
     display: block;
     font-style: italic;
     padding: 0.25em 0 0 0;
 }
 
+/* Block of answers, i.e. the horizontal panel of radio buttons
+   or a div with checkboxes and/or text input. */
 .answers {
     max-width: 30em;
     display: flex;
     flex-direction: row;
     justify-content: space-around;
     row-gap: 0.5em;
-    border-radius: 1em;
     margin-top: 1em;
-    background-color: rgba(128, 128, 128, 0.15);
-    border-style: solid;
-    border-width: 1px;
-    border-color: rgba(0, 0, 0, 0.20);
 }
 
+/* Individual answer (label containing radio button) */
 .answers .answer {
     flex-grow: 1;
     text-align: center;
@@ -126,10 +155,11 @@ body {
     border-radius: inherit;
 }
 
+/* Block of checkboxes */
 .answers.checkboxes {
     display: block;
-    background-color: rgba(128, 128, 128, 0.05);
-    border-style: none none none solid;
+    background-color: transparent;
+    border-style: none;
     padding-bottom: 1em;
     border-radius: 0;
 }
@@ -145,16 +175,18 @@ body {
 }
 
 .answers .answer:hover {
-    background-color: rgba(255, 255, 255, 0.25);
+    background-color: rgba(255, 255, 255, 0.5);
 }
 
+/*
 .answers .input[†ype="radio"] {
-    /* TBD */
+    TBD
 }
 
 .answers .input[†ype="checkbox"] {
-    /* TBD */
+    TBD
 }
+*/
 
 .answers .answer label {
     display: flex;
@@ -168,6 +200,8 @@ body {
     font-weight: normal;
 }
 
+/* Help texts under the horizontal answer bar; contains one
+   or more annotations from left to right */
 .annotations {
     display: flex;
     flex-direction: row;
@@ -184,6 +218,8 @@ body {
     text-align: left;
 }
 
+/* Adds a left-arrow before the first annotation text, provided
+   the answers are on a scale, i.e. the question has percentage options */
 .question.has-percentages .annotations .annotation:first-of-type::before {
     content: "";
     width: 0;
@@ -200,6 +236,8 @@ body {
     text-align: right;
 }
 
+/* Adds a right-arrow after the last annotation for percentage
+   questions */
 .question.has-percentages .annotations .annotation:last-of-type::after {
     content: "";
     width: 0;
@@ -210,47 +248,43 @@ body {
     border-width: 0.5em;
     border-style: solid;
 }
+
+/* Free-form text entry fields */
 .question textarea {
     width: calc(100% - 0.5em);
     min-width: calc(100% - 0.5em);
     max-width: calc(100% - 0.5em);
     min-height: 1em;
-    border-width: 1px;
-    border-style: solid;
-    border-color: rgba(0, 0, 0, 0.20);
-    font-family: inherit;
-    font-size: inherit;
     padding: 0.5em;
     margin: 0.5em 0 0 -0.5em;
+    height: 2em;
+    transition: height 0.1s ease-out;
+}
+
+.question textarea:focus {
+    height: 7em;
+    transition: height 0.1s ease-in;
 }
 
 
 
-.question.bad, .question.avg, .question.good {
-    backdrop-filter: blur(1.5em);
-    border-left-width: 4px;
-    border-right-width: 1px;
-    /*border-bottom-color: rgb(255, 255, 255);*/
-    border-style: solid;
+
+body.sessions-page {
+    padding-top: 4em;
+    padding-bottom: 1em;
+    text-align: center;
 }
 
-.question.bad {
-    border-top-color: rgb(255, 0, 0, 0.75);
-    border-left-color: rgb(255, 0, 0, 0.75);
-    border-right-color: rgb(128, 0, 0, 0.75);
-    border-bottom-color: rgb(128, 0, 0, 0.75);
+body.sessions-page .search {
+    -position: relative;
+    -top: -2em;
+    margin: 2em 0;
+    max-width: 30em;
+    width: 75%;
+    padding: 0.5em 1em 0.5em 1em;
 }
 
-.question.avg {
-    border-top-color: rgb(255, 200, 0, 0.75);
-    border-left-color: rgb(255, 200, 0, 0.75);
-    border-right-color: rgb(160, 128, 0, 0.75);
-    border-bottom-color: rgb(160, 128, 0, 0.75);
+.session .title {
+    display: block;
 }
 
-.question.good {
-    border-top-color: rgb(0, 200, 0, 0.75);
-    border-left-color: rgb(0, 200, 0, 0.75);
-    border-right-color: rgb(0, 96, 0, 0.75);
-    border-bottom-color: rgb(0, 96, 0, 0.75);
-}
