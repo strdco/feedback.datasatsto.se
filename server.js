@@ -56,6 +56,18 @@ var connectionString = {
         }
     };
 
+function sendFileOptions(root, maxAge) {
+
+    return({
+        maxAge: maxAge,
+        root: __dirname + (root || '/'),
+        dotfiles: 'deny',
+        headers: {
+            'x-timestamp': Date.now(),
+            'x-sent': true
+        }
+    });
+}
 
 
 
@@ -98,17 +110,8 @@ app.listen(serverPort, () => console.log('READY.'));
 app.get('/', function (req, res, next) {
 
     httpHeaders(res);
-
-    var options = {
-        root: __dirname + '/',
-        dotfiles: 'deny',
-        headers: {
-            'x-timestamp': Date.now(),
-            'x-sent': true
-        }
-    };
-
-    res.status(404).sendFile('error.html', options, function(err) {
+console.log('WAT');
+    res.status(404).sendFile('error.html', sendFileOptions('/'), function(err) {
         if (err) {
             res.sendStatus(404);
             return;
@@ -127,16 +130,7 @@ app.get('/', function (req, res, next) {
 app.get('/sessions', function(req, res, next) {
     httpHeaders(res);
 
-    var options = {
-        root: __dirname + '/',
-        dotfiles: 'deny',
-        headers: {
-            'x-timestamp': Date.now(),
-            'x-sent': true
-        }
-    };
-
-    res.status(200).sendFile('template.html', options, function(err) {
+    res.status(200).sendFile('template.html', sendFileOptions('/', 60 * 60 * 1000), function(err) {
         if (err) {
             res.sendStatus(404);
             return;
@@ -163,16 +157,7 @@ app.post('/api/sessions', async function (req, res, next) {
 app.get('/:sessionid([0-9]*)', function (req, res, next) {
     httpHeaders(res);
 
-    var options = {
-        root: __dirname + '/',
-        dotfiles: 'deny',
-        headers: {
-            'x-timestamp': Date.now(),
-            'x-sent': true
-        }
-    };
-
-    res.status(200).sendFile('template.html', options, function(err) {
+    res.status(200).sendFile('template.html', sendFileOptions('/', 60 * 60 * 1000), function(err) {
         if (err) {
             res.sendStatus(404);
             return;
@@ -184,7 +169,13 @@ app.get('/:sessionid([0-9]*)', function (req, res, next) {
 
 app.get('/api/create-response/:sessionid', async function (req, res, next) {
     httpHeaders(res);
-    res.status(200).send(await initResponse(req.params.sessionid));
+    var sessionId;
+    try {
+        sessionId=await initResponse(req.params.sessionid)
+        res.status(200).send(sessionId);
+    } catch {
+        res.status(404).send();
+    }
 });
 
 
@@ -197,26 +188,71 @@ app.get('/api/create-response/:sessionid', async function (req, res, next) {
   TODO: Parameter for how long a session accepts responses
   ---------------------------------------------------------------------------*/
 
-app.get('/api/add-from-sessionize/:apikey', async function (req, res, next) {
+app.get('/import-from-sessionize', function(req, res, next) {
+    httpHeaders(res);
 
-    // TODO: Hard-coded for now
-    const templateName='Data Saturday template';
+    res.status(200).sendFile('import-from-sessionize.html', sendFileOptions('/', 60 * 60 * 1000), function(err) {
+        if (err) {
+            res.sendStatus(404);
+            return;
+        }
+    });
 
-    var sessions=await getSessionizeJSON(req.params.apikey);
+    return;
+});
 
-    var eventId=await createEvent('Event name goes here', req.params.apikey, templateName);
+app.get('/api/get-templates', async function (req, res, next) {
+
+    httpHeaders(res);
+    res.status(200).send(await listTemplates());
+
+});
+
+app.post('/api/import-sessionize', async function (req, res, next) {
+
+    var eventName=req.body.eventName.trim();
+    var apikey=req.body.apikey.trim();
+    var templateName=req.body.templateName;
+    
+    if (!eventName) {
+        res.status(401).send({ "status": "error", "message": "You need to specify an event name." });
+        return;
+    }
+
+    if (!apikey) {
+        res.status(401).send({ "status": "error", "message": "You need to specify a valid Sessionize API key." });
+        return;
+    }
+
+    var sessions;
+
+    try {
+        sessions=await getSessionizeJSON(apikey);
+    } catch(e) {
+        res.status(500).send({ "status": "error", "message": "There was a problem trying to connect to the Sessionize API." });
+        return;
+    }
+
+    if (!sessions) {
+        res.status(401).send({ "status": "error", "message": "The Sessionize API key is not valid, or it is not a JSON endpoint." });
+        return;
+    }
+
+    var event=await createEvent(eventName, apikey, templateName);
 
     for (const session of sessions) {
 
         // Regular session and status accepted?
         if (session.status=='Accepted' && !session.isServiceSession) {
 
+            console.log('Session:', session.title);
+
             var presenters=[];
             for (const presenter of session.speakers) {
                 presenters.push(await createPresenter(presenter.name, null, presenter.id));
             }
 
-            var sessionId=await createSession(eventId, session.title, session.id);
+            var sessionId=await createSession(event.eventId, session.title, session.id);
 
             var isOwner=true;
             for (const presenterId of presenters) {
@@ -227,7 +263,7 @@ app.get('/api/add-from-sessionize/:apikey', async function (req, res, next) {
         }
     }
 
-    res.status(200).send({ status : "ok" });
+    res.status(200).send(event);
     //console.log(sessions);
 
 });
@@ -326,20 +362,9 @@ app.post('/api/save', async function (req, res, next) {
   ---------------------------------------------------------------------------*/
 
 app.get('/:asset', function (req, res, next) {
-
     httpHeaders(res);
 
-    var options = {
-        maxAge: 60 * 60 * 1000,         // Max age 1 hour (so we can cache stylesheets, etc)
-        root: __dirname + '/assets/',
-        dotfiles: 'deny',
-        headers: {
-            'x-timestamp': Date.now(),
-            'x-sent': true
-        }
-    };
-
-    res.sendFile(req.params.asset, options, function(err) {
+    res.sendFile(req.params.asset, sendFileOptions('/assets/', 60 * 60 * 1000), function(err) {
         if (err) {
             res.sendStatus(404);
             return;
@@ -355,14 +380,6 @@ app.get('/:asset', function (req, res, next) {
 
 
 
-function simpleHtmlEncode(plaintext) {
-    var html=plaintext;
-    html=html.replace('&', '&amp;');
-    html=html.replace('<', '&lt;');
-    html=html.replace('>', '&gt;');
-    return(html);
-}
-
 
 
 
@@ -371,11 +388,7 @@ function simpleHtmlEncode(plaintext) {
   ---------------------------------------------------------------------------*/
 
 function httpHeaders(res) {
-/*
-    // The "preload" directive also enables the site to be pinned (HSTS with Preload)
-    const hstsPreloadHeader = 'max-age=31536000; includeSubDomains; preload'
-    res.header('Strict-Transport-Security', hstsPreloadHeader); // HTTP Strict Transport Security with preload
-*/
+
     // Limits use of external script/css/image resources
     if (app.settings.env!='development') {
         res.header('Content-Security-Policy', "default-src 'self'; style-src 'self' fonts.googleapis.com; script-src 'self'; font-src fonts.gstatic.com");
@@ -421,7 +434,9 @@ async function createEvent(name, apikey, templateName) {
                 { "name": 'apikey',       "type": cannedSql.Types.VarChar,    "value": apikey }],
             function(recordset) {
                 var eventId=recordset.data[0].Event_ID;
-                resolve(eventId);
+                var eventSecret=recordset.data[0].Event_secret;
+
+                resolve({ "eventId": eventId, "eventSecret": eventSecret });
             });
         });
 }
@@ -436,7 +451,6 @@ async function createPresenter(name, email, identifier) {
                 { "name": 'identifier', "type": cannedSql.Types.VarChar, "value": identifier }],
             async function (recordset) {
                 var presenterId = recordset.data[0].Presenter_ID;
-                console.log(name, 'return(' + presenterId + ')');
                 resolve(presenterId);
             });
     });
@@ -478,8 +492,12 @@ async function initResponse(sessionId) {
             'EXECUTE Feedback.Init_Response  @Session_ID=@sessionId;',
             [   { "name": 'sessionId',   "type": cannedSql.Types.BigInt, "value": sessionId }],
             async function (recordset) {
-                var blob = JSON.parse(recordset.data[0].Question_blob);
-                resolve(blob);
+                try {
+                    var blob = JSON.parse(recordset.data[0].Question_blob);
+                    resolve(blob);
+                } catch(e) {
+                    reject();
+                }
             });
     });
 }
@@ -512,6 +530,19 @@ async function listSessions(responseId, clientKey) {
                 { "name": 'clientKey',      "type": cannedSql.Types.UniqueIdentifier,   "value": clientKey }],
             function(recordset) {
                 var blob = JSON.parse(recordset.data[0].Sessions_blob);
+                resolve(blob);
+            });
+        });
+}
+
+async function listTemplates(responseId, clientKey) {
+
+    return new Promise((resolve, reject) => {
+        cannedSql.sqlQuery(connectionString,
+            'EXECUTE Feedback.Get_Templates;',
+            [],
+            function(recordset) {
+                var blob = JSON.parse(recordset.data[0].Template_blob);
                 resolve(blob);
             });
         });

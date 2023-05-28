@@ -29,12 +29,13 @@
                         renderQuestions(blob.questions);
                         renderFooter();
                     } catch(err) {
-                        // TODO
-                        console.log(err);
+                        showStatus('An unknown issue occurred. Sorry about that.', 'bad');
                     }
+                } else {
+                    showStatus('That link is invalid or has expired.', 'bad');
                 }
             }
-    
+
             xhr.open('GET', '/api/create-response/'+docPath);
             xhr.send();
         }

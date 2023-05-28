@@ -1,0 +1,49 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type"/>
+    <meta content="utf-8" http-equiv="encoding"/>
+    <meta name="viewport" content="width=device-width, initial-scale=0.5">
+
+    <title>Import event from Sessionize</title>
+
+    <link rel="stylesheet" href="/the-lipstick.css" />
+    <script type="module" src="/import-logic.js"></script>
+</head>
+<body>
+
+    <div class="header">
+        <span class="title">Import event from Sessionize</span>
+    </div>
+
+    <div class="question required">
+        <span class="question-text">Event name</span>
+        <input id="eventname" maxlength="200" placeholder"Event name" />
+    </div>
+
+    <div class="question required">
+        <span class="question-text">Sessionize API endpoint id</span>
+        <span class="question-description">Typically an 8-character code found in the URL of the endpoint.</span>
+        <input id="sessionizekey" maxlength="20" />
+    </div>
+
+    <div class="question">
+        <span class="question-text">Want to use a template?</span>
+        <span class="question-description">You can use a template to set up the visuals and standard questions and answers for your event.</span>
+        <select id="template">
+            <option value=""">(No template)</option>
+        </select>
+    </div>
+
+    <div class="question">
+        <span class="question-text">Your secret key</span>
+        <span class="question-description">This key provides admin access to your event. Be restrictive with the people you share this with.</span>
+        <input id="eventsecret" placeholder="This will be generated when you have imported the event." readonly />
+    </div>
+
+    <div class="footer">
+        <button id="doImport" class="done">Import</button>
+    </div>
+
+</body>
+</html>

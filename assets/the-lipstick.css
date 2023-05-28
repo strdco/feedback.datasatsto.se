@@ -1,3 +1,26 @@
+/* Defaults: these values only apply if you do not override them
+   with a session-specific CSS */
+
+html {
+    --header-logo-image: url('/data-saturdays.png');
+    --header-logo-width: 150px;
+    --header-logo-height: 150px;
+
+    --theme-black: rgb(0, 0, 0);
+    --theme-white: rgb(255, 255, 255);
+    --theme-color-1: rgb(0, 147, 221);
+    --theme-border: rgb(50, 65, 71);
+
+    --header-background: rgb(255, 255, 255, 0.65);
+
+    --answer-panel: rgb(236, 236, 236);
+    --answer-border: rgb(192, 192, 192);
+
+    --border-color: rgb(0, 0, 0, 0.5);
+    --dashed-border-color: 
+}
+
+
 /* Page style */
 
     body {
@@ -51,12 +74,12 @@
 
     .statusbar.hidden {
         opacity: 0;
-        transition: opacity 0.5s linear;
+        transition: opacity 0.5s ease-in;
     }
 
     .statusbar.bad.hidden {
         opacity: 0;
-        transition: opacity 3.0s linear;
+        transition-duration: 5.0s;
     }
 
     .statusbar.good {
@@ -88,7 +111,7 @@
         border-bottom-color: rgb(200, 200, 200);
         border-bottom-width: 1px;
     }
-    
+
 /* Feedback form header */
 
     .header {
@@ -106,6 +129,10 @@
         display: block;
     }
 
+    .header .title {
+        font-size: 150%;
+        font-weight: bold;
+    }
 
 
 
@@ -126,6 +153,37 @@
         padding: 1em 4em;
     }
 
+    /* A disabled "done" button gets a spinning wheel next to it,
+       signifying that work is in progress. */
+
+    .footer button.done:disabled::after {
+        position: absolute;
+        display: block;
+        content: "";
+        width: 0.75em;
+        height: 0.75em;
+        margin-left: 8em;
+        margin-top: -1.75em;
+
+        z-index: 100;
+        animation: rotating 1.0s linear infinite;
+
+        background-color: transparent;
+
+        border-style: solid;
+        border-width: 1em;
+        border-color: rgb(0, 147, 221, 1.0) rgb(0, 147, 221, 0.8) rgb(0, 147, 221, 0.6) rgb(0, 147, 221, 0.4);
+        border-radius: 2em;
+
+        outline-style: dashed;
+        outline-color: rgb(0, 147, 221, 1.0);
+        outline-width: 2px;
+        outline-offset: 2px;
+    }
+    @keyframes rotating {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
 
 /* Questions */
 
@@ -168,7 +226,8 @@
 
 /* Answers on question cards. */
 
-    input:focus {
+    input:focus,
+    select:focus {
         outline-style: solid;
         outline-color: var(--theme-color-1);
         outline-offset: 0.5em;
@@ -310,11 +369,18 @@
         outline: solid var(--theme-color-1);
     }
 
+    .question input,
+    .question select {
+        width: calc(100% - 0.5em);
+        min-width: calc(100% - 0.5em);
+        max-width: calc(100% - 0.5em);
+        padding: 0.5em;
+        margin: 0.5em 0 0 -0.5em;
+    }
+    
 /* The search field at the top of the session list page: */
 
     body.sessions-page .search {
-        -position: relative;
-        -top: -2em;
         margin: 2em 0;
         max-width: 30em;
         width: 75%;

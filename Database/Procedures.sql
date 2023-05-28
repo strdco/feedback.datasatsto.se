@@ -35,7 +35,9 @@ IF (EXISTS (SELECT NULL
         Is_template=@Is_template,
         Accepts_responses_from=@Accepts_responses_from,
         Accepts_responses_to=@Accepts_responses_to
-    OUTPUT inserted.Event_ID
+    --- Return NULL as Event_secret to make sure a malicious actor cannot retrieve
+    --- the secret by re-submitting the Sessionize token (which is publicly available).
+    OUTPUT inserted.Event_ID, CAST(NULL AS uniqueidentifier) AS Event_secret
     WHERE Sessionize_API_key=@Sessionize_API_key;
 
     RETURN;
@@ -43,7 +45,8 @@ END;
 
 --- Create new event:
 DECLARE @event TABLE (
-    Event_ID        int NOT NULL
+    Event_ID        int NOT NULL,
+    Event_secret    uniqueidentifier NOT NULL
 );
 
 DECLARE @questions TABLE (
@@ -68,14 +71,14 @@ END;
 --- Create a brand new event
 IF (@From_template_Event_ID IS NULL)
     INSERT INTO Feedback.[Events] ([Name], CSS, Is_template, Accepts_responses_from, Accepts_responses_to)
-    OUTPUT inserted.Event_ID INTO @event (Event_ID)
+    OUTPUT inserted.Event_ID, inserted.Event_secret INTO @event (Event_ID, Event_secret)
     VALUES (@Name, @CSS, @Is_template, @Accepts_responses_from, @Accepts_responses_to);
 
 --- Copy a template event
 IF (@From_template_Event_ID IS NOT NULL) BEGIN;
     --- Feedback.Events
     INSERT INTO Feedback.[Events] ([Name], CSS, Is_template, Accepts_responses_from, Accepts_responses_to, Sessionize_API_key)
-    OUTPUT inserted.Event_ID INTO @event (Event_ID)
+    OUTPUT inserted.Event_ID, inserted.Event_secret INTO @event (Event_ID, Event_secret)
     SELECT ISNULL(@Name, [Name]),
            ISNULL(@CSS, CSS),
            @Is_template AS Is_template,
@@ -115,7 +118,7 @@ INNER JOIN sys.database_principals AS u ON
     list.[value] COLLATE database_default=SUBSTRING(u.[name], CHARINDEX(N'\', u.[name]+'\')+1, LEN(u.[name]));
 
 --- Output the new Event_ID
-SELECT Event_ID
+SELECT Event_ID, Event_secret
 FROM @event;
 
 GO
@@ -735,5 +738,26 @@ SELECT (SELECT s.Session_ID AS sessionId,
            ORDER BY s.Title
            FOR JSON PATH
            ) AS Sessions_blob;
+
+GO
+
+-------------------------------------------------------------------------------
+---
+--- List all the templates available to create events from
+---
+-------------------------------------------------------------------------------
+
+CREATE OR ALTER PROCEDURE Feedback.Get_Templates
+AS
+
+SET NOCOUNT ON;
+
+SELECT (
+        SELECT /*Event_ID AS eventId,*/ [Name] AS [name]
+        FROM Feedback.[Events]
+        WHERE Is_template=1
+        ORDER BY [Name]
+        FOR JSON PATH
+        ) AS Template_blob;
 
 GO

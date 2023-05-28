@@ -34,11 +34,12 @@ CREATE TABLE Feedback.[Events] (
     Accepts_responses_from      datetime2(0) NULL,
     Accepts_responses_to        datetime2(0) NULL,
     Sessionize_API_key          varchar(50) NULL,
+    Event_secret                uniqueidentifier DEFAULT (NEWID()) NOT NULL
     CONSTRAINT PK_Events PRIMARY KEY CLUSTERED (Event_ID)
 );
 
 CREATE UNIQUE INDEX IX_Events_Sessionize_key ON Feedback.[Events] (Sessionize_API_key) WHERE (Sessionize_API_key IS NOT NULL);
-
+CREATE UNIQUE INDEX IX_Events_Template_name ON Feedback.[Events] ([Name]) WHERE (Is_template=1);
 
 --- Row-based access rules for events
 -------------------------------------------------
