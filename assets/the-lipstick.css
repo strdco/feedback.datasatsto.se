@@ -112,6 +112,15 @@ html {
         border-color: var(--border-color);
     }
 
+    /* On small screens, don't bother centering the divs - instead,
+       make sure they don't go all the way out to the edge */
+
+    @media (max-width: 600px) {
+        .header, .question, .footer, .session {
+            margin: 0 1em;
+        }
+    }
+
     .question, .session {
         background-color: rgba(255, 255, 255, 0.95);
         backdrop-filter: blur(0.25em);
