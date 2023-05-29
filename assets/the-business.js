@@ -3,11 +3,22 @@
     var statusTimeoutId;
     var searchTimeout;
 
+/*
+ *
+ *
+ * ----------------------------------------------------------------------------
+ * Entry point for the page.
+ * ----------------------------------------------------------------------------
+ * 
+ * 
+ */
+
     window.onload = function whatsUp() {
 
         const docPath=document.location.pathname.substring(1);
 
         // Create the status bar
+        //---------------------------------------------------------------------
         var statusbarDiv=document.createElement('div');
         statusbarDiv.classList.add('statusbar');
         statusbarDiv.classList.add('hidden');
@@ -16,6 +27,7 @@
 
 
         // If the path is entirely numeric, we're reviewing a session:
+        //---------------------------------------------------------------------
         if (isFinite(docPath) && docPath!='') {
             var xhr = new XMLHttpRequest();
 
@@ -42,8 +54,10 @@
 
 
 
-        // If we're selecting a session to review:
-        if (docPath=='sessions') {
+        // If we're listing sessions to review,
+        // or listing sessions for one speaker:
+        //---------------------------------------------------------------------
+        if (docPath=='sessions' || docPath=='speaker') {
             var xhr = new XMLHttpRequest();
             xhr.open('POST', '/api/sessions');
             xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
@@ -51,8 +65,15 @@
             xhr.onload = function() {
                 if (xhr.status==200) {
                     const blob=JSON.parse(xhr.response);
-                    renderSessionHeader(blob[0].css);
-                    renderSessionList(blob);
+
+                    if (docPath=='sessions') {
+                        renderSessionHeader(blob[0].css);
+                        renderSessionList(blob);
+                    }
+
+                    if (docPath=='speaker') {
+                        renderSpeakerPage(blob);
+                    }
                 }
             }
 
@@ -63,25 +84,10 @@
 
 
 
-        // If we're on the admin page:
+        // If we're on the admin page, show the search field:
+        //---------------------------------------------------------------------
         if (docPath=='admin') {
             renderAdminHeader();
-
-            /*
-            var xhr = new XMLHttpRequest();
-            xhr.open('POST', '/api/sessions');
-            xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-
-            xhr.onload = function() {
-                if (xhr.status==200) {
-                    const blob=JSON.parse(xhr.response);
-                    renderSessionHeader(blob[0].css);
-                    renderSessionList(blob);
-                }
-            }
-
-            xhr.send(document.location.search.substring(1));
-            */
         }
 
 
@@ -90,9 +96,15 @@
 
 
 
-
-
-
+/*
+ *
+ *
+ * ----------------------------------------------------------------------------
+ * Status bar.
+ * ----------------------------------------------------------------------------
+ * 
+ * 
+ */
 
     function showStatus(statusText, cssClass) {
         // If already visible, cancel the scheduled fade-out.
@@ -120,36 +132,178 @@
         document.getElementsByClassName('statusbar')[0].classList.add('hidden');
     }
 
+
+
 /*
  *
  *
- * These functions are used on the feedback form.
+ * ----------------------------------------------------------------------------
+ * Speaker page.
  * ----------------------------------------------------------------------------
  * 
  * 
  */
 
-function renderAdminHeader() {
-    document.body.classList.add('admin-page');
-    document.title='Admin';
+    function renderSpeakerPage(blob) {
+        document.body.classList.add('speaker-page');
 
-    var input=document.createElement('input');
-    input.classList.add('secret-key');
-    input.placeholder='0000000-0000-0000-0000-000000000000';
-    input.addEventListener("keyup", (e) => {
-        //e.preventDefault();
-        if (e.code=='Enter' && e.target.value) {
+        if (blob[0].css) {
+            var l=document.createElement('link');
+            l.rel='stylesheet';
+            l.href=blob[0].css;
+            document.head.appendChild(l);
+        }
 
-        };
-    });
+        blob.forEach(async session => {
 
-    document.body.appendChild(input);
-}
+            var div=document.createElement('div');
+            div.classList.add('session');
+
+            // Add the QR code image,
+            var img=document.createElement('img');
+            img.src=document.location.protocol.replace(':', '')+'://'+document.location.host+'/qr/'+session.sessionId;
+            img.addEventListener('click', async (e) => {
+                var rng=new Range();
+                rng.selectNode(e.target);
+                document.getSelection().empty();
+                document.getSelection().addRange(rng);
+
+                const data = await fetch(e.target.src);
+                const blob = await data.blob();
+                await navigator.clipboard.write([
+                  new ClipboardItem({
+                    [blob.type]: blob
+                  })
+                ]);
+                showStatus('Copied.', 'good');
+            });
+            div.appendChild(img);
+
+            // ... the speaker name(s),
+            var span=document.createElement('span');
+            span.innerText=session.presenters.map(presenter => { return(presenter.name); }).join(', ');;
+            div.appendChild(span);
+
+            // ... the session title,
+            var span=document.createElement('span');
+            span.classList.add('title');
+            span.innerText=session.title;
+            div.appendChild(span);
+
+            // ... and the URL
+            var a=document.createElement('a');
+            a.innerText=document.location.protocol.replace(':', '')+'://'+document.location.host+'/'+session.sessionId;
+            a.href=document.location.protocol.replace(':', '')+'://'+document.location.host+'/'+session.sessionId;
+            div.appendChild(a);
+
+            document.body.appendChild(div);
+        });
+    }
 
 /*
  *
  *
- * These functions are used on the feedback form.
+ * ----------------------------------------------------------------------------
+ * Admin page.
+ * ----------------------------------------------------------------------------
+ * 
+ * 
+ */
+
+    function renderAdminHeader() {
+        document.body.classList.add('admin-page');
+        document.title='Admin';
+
+        var input=document.createElement('input');
+        input.classList.add('secret-key');
+        input.type='password';
+        input.placeholder='0000000-0000-0000-0000-000000000000';
+        input.addEventListener("keyup", (e) => {
+            //e.preventDefault();
+            if (e.code=='Enter' && e.target.value) {
+                loadAdminInfo(e.target.value);
+            };
+        });
+
+        document.body.appendChild(input);
+    }
+
+
+    function loadAdminInfo(eventSecret) {
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', '/api/get-admin-sessions');
+        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+
+        xhr.onload = function() {
+            if (xhr.status==200) {
+                var blob;
+                try {
+                    blob=JSON.parse(xhr.response);
+                    showStatus('Authenticated.', 'good');
+                } catch(e) {
+                    showStatus('That doesn\'t look right.', 'bad');
+                    return;
+                }
+
+                blob.sessions.forEach(async session => {
+
+                    var div=document.createElement('div');
+                    div.classList.add('session');
+
+                    // Add the QR code image,
+                    var img=document.createElement('img');
+                    img.src=document.location.protocol.replace(':', '')+'://'+document.location.host+'/qr/'+session.sessionId;
+                    img.addEventListener('click', async (e) => {
+                        var rng=new Range();
+                        rng.selectNode(e.target);
+                        document.getSelection().empty();
+                        document.getSelection().addRange(rng);
+
+                        const data = await fetch(e.target.src);
+                        const blob = await data.blob();
+                        await navigator.clipboard.write([
+                        new ClipboardItem({
+                            [blob.type]: blob
+                        })
+                        ]);
+                        showStatus('Copied.', 'good');
+                    });
+                    div.appendChild(img);
+
+                    // ... the speaker name(s),
+                    var span=document.createElement('span');
+                    span.innerText=session.presenters.map(presenter => { return(presenter.name); }).join(', ');;
+                    div.appendChild(span);
+
+                    // ... the session title,
+                    var span=document.createElement('span');
+                    span.classList.add('title');
+                    span.innerText=session.title;
+                    div.appendChild(span);
+
+                    // ... and the URL
+                    var a=document.createElement('a');
+                    a.innerText=document.location.protocol.replace(':', '')+'://'+document.location.host+'/'+session.sessionId;
+                    a.href=document.location.protocol.replace(':', '')+'://'+document.location.host+'/'+session.sessionId;
+                    div.appendChild(a);
+
+                    document.body.appendChild(div);
+                });
+
+            } else {
+                showStatus('But there was a problem.', 'bad');
+            }
+        }
+
+        xhr.send('eventSecret='+encodeURIComponent(eventSecret));
+    }
+
+
+/*
+ *
+ *
+ * ----------------------------------------------------------------------------
+ * Feedback page.
  * ----------------------------------------------------------------------------
  * 
  * 
@@ -358,7 +512,8 @@ function renderAdminHeader() {
 /*
  *
  *
- * These functions are used for the session listing page.
+ * ----------------------------------------------------------------------------
+ * Feedback session list.
  * ----------------------------------------------------------------------------
  * 
  * 
@@ -425,3 +580,25 @@ function renderAdminHeader() {
             }
         })
     }
+
+
+
+/*
+ *
+ *
+ * ----------------------------------------------------------------------------
+ * Mixed/utility stuff.
+ * ----------------------------------------------------------------------------
+ * 
+ * 
+ */
+
+    // https://stackoverflow.com/a/20285053/5471286
+    const toDataURL = url => fetch(url)
+    .then(response => response.blob())
+    .then(blob => new Promise((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onloadend = () => resolve(reader.result)
+        reader.onerror = reject
+        reader.readAsDataURL(blob)
+    }));

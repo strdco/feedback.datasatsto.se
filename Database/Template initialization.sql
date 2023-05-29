@@ -1,3 +1,5 @@
+WHILE (@@TRANCOUNT!=0) ROLLBACK TRANSACTION;
+
 DECLARE @Name nvarchar(200)=N'Data Saturday template';
 
 
@@ -120,5 +122,7 @@ BEGIN TRANSACTION;
     EXECUTE Feedback.Create_Answer_option @Question_ID=@Question_ID, @Answer_ordinal=4, @Percent_value=60, @CSS_classes=N'avg';
     EXECUTE Feedback.Create_Answer_option @Question_ID=@Question_ID, @Answer_ordinal=5, @Percent_value=80, @CSS_classes=N'good';
     EXECUTE Feedback.Create_Answer_option @Question_ID=@Question_ID, @Answer_ordinal=6, @Percent_value=100, @CSS_classes=N'good', @Annotation=N'Yes, very';
+
+    EXECUTE Feedback.Create_Event @Name=N'SQL Saturday template', @From_template_Event_ID=@Template_ID, @Is_template=1, @CSS=N'/sql-saturdays.css';
 
 COMMIT TRANSACTION;

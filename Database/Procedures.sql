@@ -706,16 +706,27 @@ GO
 
 -------------------------------------------------------------------------------
 ---
---- List other sessions for this event (when we've already reviewed a session)
+--- List other sessions,
+--- 1. for this event (when we've already reviewed a session), or
+--- 2. for a combination of event and presenter
 ---
 -------------------------------------------------------------------------------
 
 CREATE OR ALTER PROCEDURE Feedback.Get_Sessions
-    @Response_ID            int,
-    @Client_key             uniqueidentifier
+    @Response_ID            int=NULL,
+    @Client_key             uniqueidentifier=NULL,
+    @Presenter_ID           int=NULL,
+    @Event_ID               int=NULL
 AS
 
 SET NOCOUNT ON;
+
+IF (NOT (@Response_ID IS NOT NULL AND @Client_key IS NOT NULL AND @Presenter_ID IS NULL AND @Event_ID IS NULL
+         OR
+         @Response_ID IS NULL AND @Client_key IS NULL AND @Presenter_ID IS NOT NULL AND @Event_ID IS NOT NULL)) BEGIN;
+    THROW 50001, 'This proc requires (@Response_ID, @Client_key) or (@Presenter_ID, @Event_ID).', 1;
+    RETURN;
+END;
 
 SELECT (SELECT s.Session_ID AS sessionId,
                s.Title AS title,
@@ -723,21 +734,31 @@ SELECT (SELECT s.Session_ID AS sessionId,
 
                --- Presenters:
                (SELECT p.[Name] AS [name]
-                   FROM Feedback.Session_Presenters AS sp
-                   INNER JOIN Feedback.Presenters AS p ON sp.Presented_by_ID=p.Presenter_ID
-                   WHERE sp.Session_ID=s.Session_ID
-                   ORDER BY p.[Name]
-                   FOR JSON PATH) AS presenters
-           FROM Feedback.[Sessions] AS s
-           INNER JOIN Feedback.Events AS e ON s.Event_ID=e.Event_ID
-           WHERE s.Event_ID=(SELECT s.Event_ID
-                               FROM Feedback.Responses AS r
-                               INNER JOIN Feedback.[Sessions] AS s ON r.Session_ID=s.Session_ID
-                               WHERE r.Response_ID=@Response_ID
-                                 AND r.Client_key=@Client_key)
-           ORDER BY s.Title
-           FOR JSON PATH
-           ) AS Sessions_blob;
+                FROM Feedback.Session_Presenters AS sp
+                INNER JOIN Feedback.Presenters AS p ON sp.Presented_by_ID=p.Presenter_ID
+                WHERE sp.Session_ID=s.Session_ID
+                ORDER BY p.[Name]
+                FOR JSON PATH) AS presenters
+        FROM Feedback.[Sessions] AS s
+        INNER JOIN Feedback.Events AS e ON s.Event_ID=e.Event_ID
+
+        WHERE --- Option 1: Filtering on (@Response_ID, @Client_key)
+              s.Event_ID IN (SELECT s.Event_ID
+                             FROM Feedback.Responses AS r
+                             INNER JOIN Feedback.[Sessions] AS s ON r.Session_ID=s.Session_ID
+                             WHERE r.Response_ID=@Response_ID
+                               AND r.Client_key=@Client_key)
+
+              --- Option 2: Filtering on (@Presenter_ID, @Event_ID)
+           OR s.Session_ID IN (SELECT s.Session_ID
+                               FROM Feedback.Session_Presenters AS sp
+                               INNER JOIN Feedback.[Sessions] AS s ON sp.Session_ID=s.Session_ID
+                               WHERE sp.Presented_by_ID=@Presenter_ID
+                                 AND s.Event_ID=@Event_ID)
+
+        ORDER BY s.Title
+        FOR JSON PATH
+        ) AS Sessions_blob;
 
 GO
 
@@ -774,28 +795,30 @@ AS
 
 SET NOCOUNT ON;
 
-SELECT e.Event_ID AS eventId,
-       e.[Name] AS [name],
-       e.CSS AS css,
-       (SELECT s.Session_ID AS sessionId,
-               s.Title AS title,
-               e.CSS AS css,
+SELECT (
+        SELECT e.Event_ID AS eventId,
+            e.[Name] AS [name],
+            e.CSS AS css,
+            (SELECT s.Session_ID AS sessionId,
+                    s.Title AS title,
+                    e.CSS AS css,
 
-               --- Presenters:
-               (SELECT p.[Name] AS [name]
-                   FROM Feedback.Session_Presenters AS sp
-                   INNER JOIN Feedback.Presenters AS p ON sp.Presented_by_ID=p.Presenter_ID
-                   WHERE sp.Session_ID=s.Session_ID
-                   ORDER BY p.[Name]
-                   FOR JSON PATH) AS presenters
-           FROM Feedback.[Sessions] AS s
-           INNER JOIN Feedback.Events AS e ON s.Event_ID=e.Event_ID
-           WHERE s.Event_ID=e.Event_ID
-           ORDER BY s.Title
-           FOR JSON PATH
-           ) AS [sessions]
-FROM Feedback.[Events] AS e
-WHERE e.Event_secret=@Event_secret
-FOR JSON PATH, WITHOUT_ARRAY_WRAPPER;
+                    --- Presenters:
+                    (SELECT p.[Name] AS [name]
+                        FROM Feedback.Session_Presenters AS sp
+                        INNER JOIN Feedback.Presenters AS p ON sp.Presented_by_ID=p.Presenter_ID
+                        WHERE sp.Session_ID=s.Session_ID
+                        ORDER BY p.[Name]
+                        FOR JSON PATH) AS presenters
+                FROM Feedback.[Sessions] AS s
+                INNER JOIN Feedback.Events AS e ON s.Event_ID=e.Event_ID
+                WHERE s.Event_ID=e.Event_ID
+                ORDER BY s.Title
+                FOR JSON PATH
+                ) AS [sessions]
+        FROM Feedback.[Events] AS e
+        WHERE e.Event_secret=@Event_secret
+        FOR JSON PATH, WITHOUT_ARRAY_WRAPPER
+        ) AS Event_blob;
 
 GO

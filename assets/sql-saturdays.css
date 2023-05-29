@@ -1,18 +1,18 @@
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
-
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400&display=swap');
 
 /* Theme colors */
 
     html {
         --background-image: url('/wesley-tingey--Irs24DzLxM-unsplash.jpg');
-        --header-logo-image: url('/data-saturdays.png');
-        --header-logo-width: 150px;
-        --header-logo-height: 150px;
+        --header-logo-image: url('/sql-saturdays.png');
+        --header-logo-width: 195px;
+        --header-logo-height: 112px;
 
         --theme-black: rgb(0, 0, 0);
         --theme-white: rgb(255, 255, 255);
-        --theme-color-1: rgb(0, 147, 221);
-        --theme-border: rgb(50, 65, 71);
+        --theme-color-1: rgb(71, 147, 224);
+        --theme-border: rgb(33, 37, 41);
 
         --header-background: rgb(255, 255, 255, 0.65);
 
@@ -37,6 +37,7 @@
         background-image: var(--background-image);
         background-size: cover;
         background-attachment: fixed;
+        font-family: 'Roboto Slab';
     }
 
 /* Page header image */

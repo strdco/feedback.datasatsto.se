@@ -10,6 +10,9 @@ const https = require('https');
 // Canned SQL query interface:
 const cannedSql=require('./canned-sql.js');
 
+// QR Code module:
+const qr = require('qrcode'); // https://www.npmjs.com/package/qrcode
+
 // Other modules:
 const express = require('express');
 const cookieSession = require('cookie-session');
@@ -140,15 +143,41 @@ app.get('/sessions', function(req, res, next) {
     return;
 });
 
+// TODO:
+app.get('/speaker', function(req, res, next) {
+    httpHeaders(res);
+
+    res.status(200).sendFile('template.html', sendFileOptions('/', 60 * 60 * 1000), function(err) {
+        if (err) {
+            res.sendStatus(404);
+            return;
+        }
+    });
+
+    return;
+});
+
 app.post('/api/sessions', async function (req, res, next) {
     httpHeaders(res);
 
     var responseId=parseInt(req.body.responseId);
     var clientKey=req.body.clientKey;
+    var presenterId=parseInt(req.body.presenterId);
+    var eventId=req.body.eventId;
 
-    try {
-        res.status(200).send(await listSessions(responseId, clientKey));
-    } catch(e) {
+    if (responseId && clientKey) {
+        try {
+            res.status(200).send(await listSessions(responseId, clientKey));
+        } catch(e) {
+            res.status(401).send();
+        }
+    } else if (presenterId && eventId) {
+        try {
+            res.status(200).send(await listPresenterSessions(presenterId, eventId));
+        } catch(e) {
+            res.status(401).send();
+        }
+    } else {
         res.status(401).send();
     }
 });
@@ -215,8 +244,46 @@ app.post('/api/get-admin-sessions', async function (req, res, next) {
 
 // Send the QR code for this 
 app.get('/qr/:sessionid([0-9]*)', async function (req, res, next) {
-    res.status(200).send('TODO');
+
+    const dir=__dirname+'/qr';
+    if (!fs.existsSync(dir)) { fs.mkdirSync(dir); }
+
+    const file=dir+'/'+req.params.sessionid+'.png';
+    const url='https://'+req.headers.host+'/qr/'+req.params.sessionid;
+
+    // Create the PNG file:
+    if (!fs.existsSync(file)) {
+        try {
+            await createQrFile(file, url);
+        } catch(e) {
+            console.log(e);
+        }
+    }
+
+    // ... and return it to the client:
+    res.sendFile('/qr/'+req.params.sessionid+'.png', sendFileOptions('/', 60 * 60 * 1000), function(err) {
+        if (err) {
+            res.sendStatus(404);
+            return;
+        }
+    });
 });
+
+
+// Generate the QR code image file:
+async function createQrFile(file, url) {
+
+    return new Promise((resolve, reject) => {
+        qr.toFile(file, url, { type: 'png', width: 512, margin: 0 }, (err) => {
+            if (err) {
+                reject();
+            } else {
+                resolve();
+            }
+        });
+    });
+
+}
 
 
 
@@ -587,6 +654,28 @@ async function listSessions(responseId, clientKey) {
             });
         });
 }
+
+async function listPresenterSessions(presenterId, eventId) {
+
+    return new Promise((resolve, reject) => {
+        cannedSql.sqlQuery(connectionString,
+            'EXECUTE Feedback.Get_Sessions '+
+                    '@Presenter_ID=@presenterId, @Event_ID=@eventId;',
+            [   { "name": 'presenterId', "type": cannedSql.Types.Int, "value": presenterId },
+                { "name": 'eventId',     "type": cannedSql.Types.Int, "value": eventId }],
+            function(recordset) {
+                try {
+                    var blob = JSON.parse(recordset.data[0].Sessions_blob);
+                    resolve(blob);
+                } catch(e) {
+                    reject();
+                }
+            });
+        });
+}
+
+
+
 
 async function listTemplates(responseId, clientKey) {
 

@@ -10,6 +10,7 @@
     "express": "*",
     "fs": "*",
     "path": "*",
-    "tedious": "*"
+    "tedious": "*",
+    "qrcode": "*"
   }
 }

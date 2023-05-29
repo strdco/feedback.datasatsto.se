@@ -30,6 +30,7 @@ html {
     }
 
     body.sessions-page,
+    body.speaker-page,
     body.admin-page {
         padding-top: 4em;
         padding-bottom: 1em;
@@ -52,6 +53,11 @@ html {
     img.header-logo {
         display: block;
         margin: auto;
+    }
+
+    body.speaker-page img.header-logo {
+        margin-top: -2em;
+        margin-bottom: 2em;
     }
 
 /* Popup status messages that appear and fade out automatically */
@@ -372,6 +378,7 @@ html {
 
     .question input:not([type]),
     .question input[type="text"],
+    .question input[type="password"],
     .question select {
         width: calc(100% - 0.5em);
         min-width: calc(100% - 0.5em);
@@ -403,3 +410,29 @@ html {
         display: block;
     }
 
+/* Admin page: list of sessions */
+
+body.admin-page .session {
+    text-align: center;
+}
+
+
+
+body.admin-page .session img,
+body.speaker-page .session img {
+    display: block;
+    padding-top: 1em;
+    padding-bottom: 2em;
+    width: 16em;
+    height: 16em;
+    margin: auto;
+    cursor: grab;
+}
+
+body.admin-page .session span,
+body.admin-page .session a,
+body.speaker-page .session span,
+body.speaker-page .session a {
+    display: block;
+    margin-top: 0.5em;
+}
