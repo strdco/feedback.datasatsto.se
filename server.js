@@ -280,7 +280,7 @@ app.get('/qr/:sessionid([0-9]*)', async function (req, res, next) {
     if (!fs.existsSync(dir)) { fs.mkdirSync(dir); }
 
     const file=dir+'/'+req.params.sessionid+'.png';
-    const url='https://'+req.headers.host+'/qr/'+req.params.sessionid;
+    const url='https://'+req.headers.host+'/'+req.params.sessionid;
 
     // Create the PNG file:
     if (!fs.existsSync(file)) {
