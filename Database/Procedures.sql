@@ -816,7 +816,6 @@ SELECT (
                      FOR JSON PATH) AS presenters
 
                 FROM Feedback.[Sessions] AS s
-                INNER JOIN Feedback.Events AS e ON s.Event_ID=e.Event_ID
                 WHERE s.Event_ID=e.Event_ID
                 ORDER BY s.Title
                 FOR JSON PATH

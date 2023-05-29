@@ -16,14 +16,14 @@ The goal for this solution is to be faster, easier, and cleaner than paper.
 
 # Workflow
 
-* [Importing sessions](#Importing-from-Sessionize) and speakers from Sessionize
-* The organizer distributes QR codes to speakers
-* Attendees follow a QR code to the review page
-* The organizer can extract a dataset of the reviews
+* The oprganizer [imports sessions](#importing-from-sessionize) and speakers from Sessionize
+* The organizer distributes QR codes from the [admin page](#admin) to speakers
+* Attendees follow a QR code to the [review page](#session-id)
+* After the event, the organizer extracts a [dataset](#apireportevent-secret) with the sessions and evaluations
 
 # Setting up the database and web
 
-*If you're using a managed service, you can skip this step and go directly to "[Setting up an event](#Setting-up-an-event)".*
+*If you're using a managed service, you can skip this step and go directly to "[Setting up an event](#setting-up-an-event)".*
 
 The application runs on Node.js and a SQL Server-compatible database, like SQL Server 2019 or 2022, Azure SQL Database or Azure SQL Managed Instance.
 
@@ -62,7 +62,7 @@ In your organizer dashboard, select "API / Embed" in the menu, then click the "C
 * Check "Use UTC timezone for schedule".
 * Leave the default options checked.
 
-![Sessionize API endpoint screenshot](Docs/sessionize-endpoint-screenshot.png)]
+![Sessionize API endpoint screenshot](Docs/sessionize-endpoint-screenshot.png)
 
 Remember that anyone can access your endpoint without authentication - all you need is literally just the code, which can be extracted from any public site with an embedded schedule grid, session list, speaker wall, etc.
 
@@ -194,12 +194,6 @@ Creates the JSON blob returned by the [event report](#apireportevent-secret).
 
 # Entry points
 
-## /admin
-
-Lists sessions with their respective QR codes.
-
-*Requires authentication with the Event secret.*
-
 ## /import
 
 Allows the user to import an event from Sessionize.
@@ -207,16 +201,18 @@ Allows the user to import an event from Sessionize.
 *Not sure how we're authenticating this feature, as we don't
  want just anyone to be able to run a ton of imports.*
 
+## /admin
+
+Lists sessions with their respective QR codes.
+
+*Requires authentication with the Event secret.*
+
 ## /sessions
 
 Lists all sessions for an event. This page inherits parameters from an existing
 **Response** that the attendee has filled out previously:
 
 Example: `/sessions?responseId=00000&clientKey=0000000-0000-0000-0000-000000000000`
-
-## /speaker
-
-*TBD*
 
 ## /{session id}
 

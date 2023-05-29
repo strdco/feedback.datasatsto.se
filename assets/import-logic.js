@@ -80,6 +80,7 @@ function doImport() {
     var eventName=document.getElementById('eventname');
     var apikey=document.getElementById('sessionizekey');
     var templateName=document.getElementById('template');
+    var masterPassword=document.getElementById('masterPassword');
 
     var theButton=document.getElementsByTagName('button')[0];
 
@@ -95,10 +96,17 @@ function doImport() {
         return;
     }
 
+    if (!masterPassword.value) {
+        showStatus('You need to specify the master password.', 'bad');
+        masterPassword.focus();
+        return;
+    }
+
     var postBody=
         'eventName='+encodeURIComponent(eventName.value)+'&'+
         'apikey='+encodeURIComponent(apikey.value)+'&'+
-        'templateName='+encodeURIComponent(templateName.value);
+        'templateName='+encodeURIComponent(templateName.value)+'&'+
+        'masterPassword='+encodeURIComponent(masterPassword.value);
 
     var xhr = new XMLHttpRequest();
     xhr.open('POST', '/api/import-sessionize');
@@ -112,13 +120,13 @@ function doImport() {
         try {
             blob=JSON.parse(xhr.response);
 
-            document.getElementById('eventsecret').value=blob.eventSecret;
+            document.getElementById('eventsecret').value=blob.eventSecret || 'Event secret not shown when updating an existing event.';
         } catch {
             blob={ "status": "error", "message": "Bad things have happened." };
         }
 
         if (xhr.status==200) {
-            showStatus('Saved', 'good');
+            showStatus('Event created!', 'good');
         } else {
             showStatus(blob.message || 'There was a problem importing the event.', 'bad');
         }

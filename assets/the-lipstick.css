@@ -11,7 +11,7 @@ html {
     --theme-color-1: rgb(0, 147, 221);
     --theme-border: rgb(50, 65, 71);
 
-    --header-background: rgb(255, 255, 255, 0.65);
+    --header-background: rgb(255, 255, 255, 0.5);
 
     --answer-panel: rgb(236, 236, 236);
     --answer-border: rgb(192, 192, 192);
@@ -425,7 +425,9 @@ body.admin-page .session {
     text-align: center;
 }
 
-
+body.admin-page .session a {
+    cursor: copy;
+}
 
 body.admin-page .session img,
 body.speaker-page .session img {
@@ -435,7 +437,7 @@ body.speaker-page .session img {
     width: 16em;
     height: 16em;
     margin: auto;
-    cursor: grab;
+    cursor: copy;
 }
 
 body.admin-page .session span,

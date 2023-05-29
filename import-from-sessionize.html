@@ -3,12 +3,11 @@
 <head>
     <meta content="text/html;charset=utf-8" http-equiv="Content-Type"/>
     <meta content="utf-8" http-equiv="encoding"/>
-    <meta name="viewport" content="width=device-width, initial-scale=0.5">
 
     <title>Import event from Sessionize</title>
 
     <link rel="stylesheet" href="/the-lipstick.css" />
-    <link rel="stylesheet" id="dynamiccss" href="/the-lipstick.css" />
+    <link rel="stylesheet" id="dynamiccss" href="/blank.css" />
     <script src="/statusbar.js"></script>
     <script type="module" src="/import-logic.js"></script>
 </head>
@@ -27,6 +26,12 @@
         <span class="question-text">Sessionize API endpoint id</span>
         <span class="question-description">Typically an 8-character code found in the URL of the endpoint.</span>
         <input id="sessionizekey" maxlength="20" />
+    </div>
+
+    <div class="question required">
+        <span class="question-text">Master password</span>
+        <span class="question-description">Importing a new event requires a master password for this app.</span>
+        <input id="masterPassword" type="password" />
     </div>
 
     <div class="question">

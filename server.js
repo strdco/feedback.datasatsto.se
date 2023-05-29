@@ -55,7 +55,7 @@ var connectionString = {
                requestTimeout : 30000,   // 20 seconds before request times out.
                rowCollectionOnRequestCompletion : true,
                dateFormat     : 'ymd',
-               appName        : 'review.datasatsto.se' // host name of the web server
+               appName        : 'feedback.datasatsto.se' // host name of the web server
         }
     };
 
@@ -78,9 +78,11 @@ function sendFileOptions(root, maxAge) {
   Start the web server
 -----------------------------------------------------------------------------*/
 
+console.log('');
 console.log('HTTP port:       '+serverPort);
 console.log('Database server: '+process.env.dbserver);
 console.log('Express env:     '+app.settings.env);
+console.log('');
 console.log('');
 
 app.listen(serverPort, () => console.log('READY.'));
@@ -107,7 +109,7 @@ app.listen(serverPort, () => console.log('READY.'));
 
 
 /*-----------------------------------------------------------------------------
-  Default URL: returns a 404
+  Default URL: redirect to the admin page.
   ---------------------------------------------------------------------------*/
 
 app.get('/', function (req, res, next) {
@@ -119,11 +121,16 @@ app.get('/', function (req, res, next) {
 });
 
 
+
+
+
+
+
 /*-----------------------------------------------------------------------------
-  List sessions
+  Evaluate a new session
   ---------------------------------------------------------------------------*/
 
-app.get('/sessions', function(req, res, next) {
+app.get('/:sessionid([0-9]*)', function (req, res, next) {
     httpHeaders(res);
 
     res.status(200).sendFile('template.html', sendFileOptions('/', 60 * 60 * 1000), function(err) {
@@ -136,8 +143,49 @@ app.get('/sessions', function(req, res, next) {
     return;
 });
 
-// TODO:
-app.get('/speaker', function(req, res, next) {
+// Get the questions and answer options for a session
+app.get('/api/create-response/:sessionid', async function (req, res, next) {
+    httpHeaders(res);
+    var sessionId;
+    try {
+        sessionId=await initResponse(req.params.sessionid)
+        res.status(200).send(sessionId);
+    } catch {
+        res.status(404).send();
+    }
+});
+
+// Save responses - fires every time a user makes/changes a selection
+app.post('/api/save', async function (req, res, next) {
+
+    var responseId=parseInt(req.body.responseId);
+    var clientKey=req.body.clientKey;
+    var questionId=parseInt(req.body.questionId);
+    var answerOrdinal=parseInt(req.body.answerOrdinal) || null;
+    var plaintext=req.body.plaintext;
+
+    var output=await saveResponse(responseId, clientKey, questionId, answerOrdinal, plaintext);
+    if (output.error) {
+        res.status(500).send({ "status": "error" });
+    } else {
+        res.status(200).send({ "status": "ok" });
+    }
+
+});
+
+
+
+
+
+
+
+/*-----------------------------------------------------------------------------
+  List sessions.
+
+  Users arrive here when they click the "Done" button on the eval form.
+  ---------------------------------------------------------------------------*/
+
+app.get('/sessions', function(req, res, next) {
     httpHeaders(res);
 
     res.status(200).sendFile('template.html', sendFileOptions('/', 60 * 60 * 1000), function(err) {
@@ -176,37 +224,16 @@ app.post('/api/sessions', async function (req, res, next) {
 });
 
 
-/*-----------------------------------------------------------------------------
-  Review a new session
-  ---------------------------------------------------------------------------*/
 
-app.get('/:sessionid([0-9]*)', function (req, res, next) {
-    httpHeaders(res);
 
-    res.status(200).sendFile('template.html', sendFileOptions('/', 60 * 60 * 1000), function(err) {
-        if (err) {
-            res.sendStatus(404);
-            return;
-        }
-    });
 
-    return;
-});
-
-app.get('/api/create-response/:sessionid', async function (req, res, next) {
-    httpHeaders(res);
-    var sessionId;
-    try {
-        sessionId=await initResponse(req.params.sessionid)
-        res.status(200).send(sessionId);
-    } catch {
-        res.status(404).send();
-    }
-});
 
 
 /*-----------------------------------------------------------------------------
-  Admin page
+  The admin page
+
+  Lists all sessions for an event, with the QR code, speaker name, session
+  name, and a URL to the evaluation form.
   ---------------------------------------------------------------------------*/
 
 app.get('/admin', function(req, res, next) {
@@ -222,6 +249,7 @@ app.get('/admin', function(req, res, next) {
     return;
 });
 
+// Get list of sessions for the event.
 app.post('/api/get-admin-sessions', async function (req, res, next) {
 
     var eventSecret=req.body.eventSecret.trim();
@@ -234,6 +262,16 @@ app.post('/api/get-admin-sessions', async function (req, res, next) {
     }
 
 });
+
+
+
+
+
+
+
+/*-----------------------------------------------------------------------------
+  QR code stuff
+  ---------------------------------------------------------------------------*/
 
 // Send the QR code for this 
 app.get('/qr/:sessionid([0-9]*)', async function (req, res, next) {
@@ -280,22 +318,8 @@ async function createQrFile(file, url) {
 
 
 
-/*-----------------------------------------------------------------------------
-  Report
-  ---------------------------------------------------------------------------*/
 
-app.get('/api/report/:eventsecret', async function(req, res, next) {
-    httpHeaders(res);
 
-    try {
-        const report=await getReport(req.params.eventsecret);
-        res.status(200).send(report);
-    } catch(e) {
-        console.log(e);
-        res.status(401).send();
-    }
-
-});
 
 
 /*-----------------------------------------------------------------------------
@@ -318,6 +342,7 @@ app.get('/import', function(req, res, next) {
     return;
 });
 
+// List all available event templates
 app.get('/api/get-templates', async function (req, res, next) {
 
     httpHeaders(res);
@@ -325,11 +350,13 @@ app.get('/api/get-templates', async function (req, res, next) {
 
 });
 
+// Perform the Sessionize import
 app.post('/api/import-sessionize', async function (req, res, next) {
 
     var eventName=req.body.eventName.trim();
     var apikey=req.body.apikey.trim();
     var templateName=req.body.templateName;
+    var masterPassword=req.body.masterPassword;
     
     if (!eventName) {
         res.status(401).send({ "status": "error", "message": "You need to specify an event name." });
@@ -338,6 +365,16 @@ app.post('/api/import-sessionize', async function (req, res, next) {
 
     if (!apikey) {
         res.status(401).send({ "status": "error", "message": "You need to specify a valid Sessionize API key." });
+        return;
+    }
+
+    if (!masterPassword) {
+        res.status(401).send({ "status": "error", "message": "You need to specify the master password." });
+        return;
+    }
+
+    if (masterPassword!=process.env.masterpassword) {
+        res.status(401).send({ "status": "error", "message": "The master password was incorrect. Contact the server admin if you need help." });
         return;
     }
 
@@ -384,14 +421,12 @@ app.post('/api/import-sessionize', async function (req, res, next) {
 
 });
 
-
-
+// Collect data from the Sessionize endpoint
 async function getSessionizeJSON(apikey) {
 
     return new Promise((resolve, reject) => {
         const options = {
-            method: 'GET' /*,
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' } */
+            method: 'GET'
         };
 
         const webReq = https.request(
@@ -439,22 +474,18 @@ async function getSessionizeJSON(apikey) {
 
 
 /*-----------------------------------------------------------------------------
-  Write a response
+  Generate the event report
   ---------------------------------------------------------------------------*/
 
-app.post('/api/save', async function (req, res, next) {
+app.get('/api/report/:eventsecret', async function(req, res, next) {
+    httpHeaders(res);
 
-    var responseId=parseInt(req.body.responseId);
-    var clientKey=req.body.clientKey;
-    var questionId=parseInt(req.body.questionId);
-    var answerOrdinal=parseInt(req.body.answerOrdinal) || null;
-    var plaintext=req.body.plaintext;
-
-    var output=await saveResponse(responseId, clientKey, questionId, answerOrdinal, plaintext);
-    if (output.error) {
-        res.status(500).send({ "status": "error" });
-    } else {
-        res.status(200).send({ "status": "ok" });
+    try {
+        const report=await getReport(req.params.eventsecret);
+        res.status(200).send(report);
+    } catch(e) {
+        console.log(e);
+        res.status(401).send();
     }
 
 });
@@ -465,16 +496,11 @@ app.post('/api/save', async function (req, res, next) {
 
 
 
-
-
-
-
-
-
-
-
 /*-----------------------------------------------------------------------------
-  Other related assets, like CSS or other files:
+  Other related assets, like images, CSS or other files.
+
+  They should all be in the "assets" folder, in order to prevent a malicious
+  actor from accessing them.
   ---------------------------------------------------------------------------*/
 
 app.get('/:asset', function (req, res, next) {
@@ -487,11 +513,6 @@ app.get('/:asset', function (req, res, next) {
         }
     });
 });
-
-
-
-
-
 
 
 
@@ -524,11 +545,6 @@ function httpHeaders(res) {
 
     return;
 }
-
-
-
-
-
 
 
 
@@ -676,10 +692,7 @@ async function listPresenterSessions(presenterId, eventId) {
         });
 }
 
-
-
-
-async function listTemplates(responseId, clientKey) {
+async function listTemplates() {
 
     return new Promise((resolve, reject) => {
         cannedSql.sqlQuery(connectionString,

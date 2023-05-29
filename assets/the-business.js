@@ -117,21 +117,7 @@
             // Add the QR code image,
             var img=document.createElement('img');
             img.src=document.location.protocol.replace(':', '')+'://'+document.location.host+'/qr/'+session.sessionId;
-            img.addEventListener('click', async (e) => {
-                var rng=new Range();
-                rng.selectNode(e.target);
-                document.getSelection().empty();
-                document.getSelection().addRange(rng);
-
-                const data = await fetch(e.target.src);
-                const blob = await data.blob();
-                await navigator.clipboard.write([
-                  new ClipboardItem({
-                    [blob.type]: blob
-                  })
-                ]);
-                showStatus('Copied.', 'good');
-            });
+            img.addEventListener('click', copyItemToClipboard);
             div.appendChild(img);
 
             // ... the speaker name(s),
@@ -149,6 +135,7 @@
             var a=document.createElement('a');
             a.innerText=document.location.protocol.replace(':', '')+'://'+document.location.host+'/'+session.sessionId;
             a.href=document.location.protocol.replace(':', '')+'://'+document.location.host+'/'+session.sessionId;
+            a.addEventListener('click', copyItemToClipboard);
             div.appendChild(a);
 
             document.body.appendChild(div);
@@ -172,15 +159,25 @@
         var input=document.createElement('input');
         input.classList.add('secret-key');
         input.type='password';
-        input.placeholder='0000000-0000-0000-0000-000000000000';
+        input.placeholder='Please authenticate using your event key.';
         input.addEventListener("keyup", (e) => {
             //e.preventDefault();
             if (e.code=='Enter' && e.target.value) {
                 loadAdminInfo(e.target.value);
             };
         });
-
         document.body.appendChild(input);
+
+        var header=document.createElement('div');
+        header.classList.add('header');
+        header.style.display='none';
+
+        var title=document.createElement('span');
+        title.classList.add('title');
+        title.innerText='Click on a QR code or link to copy.';
+        header.appendChild(title);
+
+        document.body.appendChild(header);
     }
 
 
@@ -200,6 +197,14 @@
                     return;
                 }
 
+                var oldDivs=document.getElementsByClassName('session');
+                for (n=oldDivs.length-1; n>=0; n--) {
+                    oldDivs[n].remove();
+                }
+
+                document.querySelector('link#dynamiccss').href=blob.css || '/blank.css';
+                document.getElementsByClassName('header')[0].style.display='';
+
                 if (!blob.sessions) {
                     showStatus('This event does not have any sessions.', 'bad');
                     return;
@@ -213,21 +218,7 @@
                     // Add the QR code image,
                     var img=document.createElement('img');
                     img.src=document.location.protocol.replace(':', '')+'://'+document.location.host+'/qr/'+session.sessionId;
-                    img.addEventListener('click', async (e) => {
-                        var rng=new Range();
-                        rng.selectNode(e.target);
-                        document.getSelection().empty();
-                        document.getSelection().addRange(rng);
-
-                        const data = await fetch(e.target.src);
-                        const blob = await data.blob();
-                        await navigator.clipboard.write([
-                            new ClipboardItem({
-                                [blob.type]: blob
-                            })
-                        ]);
-                        showStatus('Copied.', 'good');
-                    });
+                    img.addEventListener('click', copyItemToClipboard);
                     div.appendChild(img);
 
                     // ... the speaker name(s),
@@ -245,6 +236,8 @@
                     var a=document.createElement('a');
                     a.innerText=document.location.protocol.replace(':', '')+'://'+document.location.host+'/'+session.sessionId;
                     a.href=document.location.protocol.replace(':', '')+'://'+document.location.host+'/'+session.sessionId;
+                    a.target='_new';
+                    a.addEventListener('click', copyItemToClipboard);
                     div.appendChild(a);
 
                     document.body.appendChild(div);
@@ -562,3 +555,30 @@
         reader.onerror = reject
         reader.readAsDataURL(blob)
     }));
+
+
+    async function copyItemToClipboard(e) {
+        e.preventDefault(); // Prevent for instance clicking on a link from following it.
+
+        var rng=new Range();
+        rng.selectNode(e.target);
+        document.getSelection().empty();
+        document.getSelection().addRange(rng);
+
+        if (e.target.tagName.toLowerCase()=='img') {
+            const data = await fetch(e.target.src);
+            const blob = await data.blob();
+            await navigator.clipboard.write([
+                new ClipboardItem({
+                    [blob.type]: blob
+                })
+            ]);
+        } else {
+            // https://stackoverflow.com/a/73148322/5471286
+            navigator.clipboard.write([new ClipboardItem({
+                'text/plain': new Blob([e.target.innerText], {type: 'text/plain'}),
+                'text/html': new Blob([e.target.outerHTML], {type: 'text/html'})
+              })]);
+        }
+        showStatus('Copied.', 'good');
+    }
