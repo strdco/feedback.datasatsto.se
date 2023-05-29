@@ -33,7 +33,8 @@ In the database,
 
 * run "Feedback schema.sql" in the database.
 * run "Procedures.sql" in the same database.
-* create a user (with or without a login) that has EXECUTE permissions to the "Feedback" schema.
+* create a user (with or without a login)
+* Grant the user EXECUTE permissions on SCHEMA::Feedback
 * optionally, run "Template initialization.sql" to create two default templates for Data Saturday and SQL Saturday events.
 
 To deploy to Azure Web Apps,
@@ -46,7 +47,7 @@ To deploy to Azure Web Apps,
     * dbpassword: password for the SQL principal
     * dbname: the name of the SQL database
 * In Deployment Center, set up the app to automatic deploy from Github
-    * Build provider: Github Actions
+    * Make sure to set the build provider to "App Service Build Service", not "Github Actions".
 
 # Setting up an event
 
