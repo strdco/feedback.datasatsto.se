@@ -160,6 +160,14 @@ html {
         padding: 1em 4em;
     }
 
+    /* Gray out the button when it's disabled. */
+
+    .footer button.done:disabled,
+    .footer button.done:hover,
+    .footer button.done:active {
+        filter: saturate(0.0);
+    }
+
     /* A disabled "done" button gets a spinning wheel next to it,
        signifying that work is in progress. */
 
@@ -176,6 +184,7 @@ html {
         animation: rotating 1.0s linear infinite;
 
         background-color: transparent;
+        filter: saturate(1.0);
 
         border-style: solid;
         border-width: 1em;

@@ -1,30 +1,25 @@
-var statusTimeoutId;
+var templateList=[];
 
 window.onload = function whatsUp() {
-
-    const docPath=document.location.pathname.substring(1);
-
-    // Create the status bar
-    var statusbarDiv=document.createElement('div');
-    statusbarDiv.classList.add('statusbar');
-    statusbarDiv.classList.add('hidden');
-    document.body.appendChild(statusbarDiv);
-
 
     // Add an event handler to the "Import" button:
     document.getElementById('doImport').addEventListener('click', doImport);
 
 
-    // If the path is entirely numeric, we're reviewing a session:
+    // Populate the template dropdown:
+    var select=document.getElementById("template");
     var xhr = new XMLHttpRequest();
 
     xhr.onload = function() {
         if (xhr.status == 200) {
             try {
-                var select=document.getElementById("template");
 
                 const templates=JSON.parse(xhr.response);
                 for (const template of templates) {
+                    if (template.css) {
+                        templateList.push({ "name": template.name, "css": template.css });
+                    }
+
                     var option=document.createElement('option');
                     option.value=template.name;
                     option.innerText=template.name;
@@ -41,6 +36,13 @@ window.onload = function whatsUp() {
     xhr.open('GET', '/api/get-templates');
     xhr.send();
 
+
+    // Add an event handler to the template dropdown:
+    select.addEventListener('change', (e) => {
+        if (e.target.value) {
+            document.querySelector('link#dynamiccss').href=templateList.filter(css => css.name==e.target.value)[0].css;
+        }
+    });
 }
 
 
@@ -118,10 +120,15 @@ function doImport() {
         if (xhr.status==200) {
             showStatus('Saved', 'good');
         } else {
-            showStatus(blob.message || 'There was a problem importing the event.', 'bad');
+            showStatus(blob.message || 'There was a problem importing the event.', 'bad');
         }
     }
 
     theButton.disabled=true;
-    xhr.send(postBody);
+    try {
+        xhr.send(postBody);
+    } catch(e) {
+        showStatus('Something went wrong with the API call.', 'bad');
+        theButton.disabled=false;
+    }
 }

@@ -1,6 +1,5 @@
     var clientKey;
     var responseId;
-    var statusTimeoutId;
     var searchTimeout;
 
 /*
@@ -16,13 +15,6 @@
     window.onload = function whatsUp() {
 
         const docPath=document.location.pathname.substring(1);
-
-        // Create the status bar
-        //---------------------------------------------------------------------
-        var statusbarDiv=document.createElement('div');
-        statusbarDiv.classList.add('statusbar');
-        statusbarDiv.classList.add('hidden');
-        document.body.appendChild(statusbarDiv);
 
 
 
@@ -94,43 +86,6 @@
     }
 
 
-
-
-/*
- *
- *
- * ----------------------------------------------------------------------------
- * Status bar.
- * ----------------------------------------------------------------------------
- * 
- * 
- */
-
-    function showStatus(statusText, cssClass) {
-        // If already visible, cancel the scheduled fade-out.
-        if (statusTimeoutId) {
-            clearTimeout(statusTimeoutId);
-            statusTimeoutId=null;
-        }
-
-        var statusbarDiv=document.getElementsByClassName('statusbar')[0];
-        statusbarDiv.innerText=statusText;
-
-        // Remove all the current CSS classes:
-        statusbarDiv.classList='statusbar';
-
-        // Add a particular CSS class
-        if (cssClass) {
-            statusbarDiv.classList.add(cssClass);
-        }
-
-        // Schedule a new fade-out:
-        statusTimeoutId=setTimeout(hideStatus, 1000);
-    }
-
-    function hideStatus() {
-        document.getElementsByClassName('statusbar')[0].classList.add('hidden');
-    }
 
 
 
@@ -245,6 +200,11 @@
                     return;
                 }
 
+                if (!blob.sessions) {
+                    showStatus('This event does not have any sessions.', 'bad');
+                    return;
+                }
+
                 blob.sessions.forEach(async session => {
 
                     var div=document.createElement('div');
@@ -262,9 +222,9 @@
                         const data = await fetch(e.target.src);
                         const blob = await data.blob();
                         await navigator.clipboard.write([
-                        new ClipboardItem({
-                            [blob.type]: blob
-                        })
+                            new ClipboardItem({
+                                [blob.type]: blob
+                            })
                         ]);
                         showStatus('Copied.', 'good');
                     });

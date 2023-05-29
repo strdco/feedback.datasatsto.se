@@ -43,6 +43,8 @@ IF (EXISTS (SELECT NULL
     RETURN;
 END;
 
+DECLARE @Event_ID int;
+
 --- Create new event:
 DECLARE @event TABLE (
     Event_ID        int NOT NULL,
@@ -88,15 +90,17 @@ IF (@From_template_Event_ID IS NOT NULL) BEGIN;
     FROM Feedback.Events
     WHERE Event_ID=@From_template_Event_ID;
 
+    SELECT @Event_ID=Event_ID FROM @event;
+
     --- Feedback.Questions
     MERGE INTO Feedback.Questions AS new
-    USING Feedback.Questions AS old ON
-        old.Event_ID=@From_template_Event_ID AND
-        new.Event_ID=-1
+    USING (SELECT * FROM Feedback.Questions WHERE Event_ID=@From_template_Event_ID) AS old ON
+        new.Display_order=old.Display_order AND
+        new.Event_ID=@Event_ID
 
     WHEN NOT MATCHED BY TARGET THEN
         INSERT (Event_ID, Display_order, Question, [Description], Optimal_percent, Is_required, [Type], Has_plaintext)
-        VALUES ((SELECT Event_ID FROM @event), Display_order, Question, [Description], Optimal_percent, Is_required, [Type], Has_plaintext)
+        VALUES (@Event_ID, Display_order, Question, [Description], Optimal_percent, Is_required, [Type], Has_plaintext)
 
     OUTPUT old.Question_ID, inserted.Question_ID
     INTO @questions (Question_ID, New_Question_ID);
@@ -774,7 +778,7 @@ AS
 SET NOCOUNT ON;
 
 SELECT (
-        SELECT /*Event_ID AS eventId,*/ [Name] AS [name]
+        SELECT /*Event_ID AS eventId,*/ [Name] AS [name], CSS AS css
         FROM Feedback.[Events]
         WHERE Is_template=1
         ORDER BY [Name]
@@ -805,11 +809,12 @@ SELECT (
 
                     --- Presenters:
                     (SELECT p.[Name] AS [name]
-                        FROM Feedback.Session_Presenters AS sp
-                        INNER JOIN Feedback.Presenters AS p ON sp.Presented_by_ID=p.Presenter_ID
-                        WHERE sp.Session_ID=s.Session_ID
-                        ORDER BY p.[Name]
-                        FOR JSON PATH) AS presenters
+                     FROM Feedback.Session_Presenters AS sp
+                     INNER JOIN Feedback.Presenters AS p ON sp.Presented_by_ID=p.Presenter_ID
+                     WHERE sp.Session_ID=s.Session_ID
+                     ORDER BY p.[Name]
+                     FOR JSON PATH) AS presenters
+
                 FROM Feedback.[Sessions] AS s
                 INNER JOIN Feedback.Events AS e ON s.Event_ID=e.Event_ID
                 WHERE s.Event_ID=e.Event_ID
@@ -820,5 +825,95 @@ SELECT (
         WHERE e.Event_secret=@Event_secret
         FOR JSON PATH, WITHOUT_ARRAY_WRAPPER
         ) AS Event_blob;
+
+GO
+
+-------------------------------------------------------------------------------
+---
+--- Extract a report on the event, containing details on sessions, presenters,
+--- questions, answer options, as well as all the responses.
+---
+-------------------------------------------------------------------------------
+
+CREATE OR ALTER PROCEDURE Feedback.Get_Event_Report
+    @Event_secret       uniqueidentifier
+AS
+
+SET NOCOUNT ON;
+
+DECLARE @Event_ID int;
+
+SELECT TOP (1) @Event_ID=Event_ID
+FROM Feedback.[Events] AS e
+WHERE e.Event_secret=@Event_secret;
+
+SELECT (
+        SELECT e.[Name] AS [name],
+
+            (SELECT p.Presenter_ID AS presenterId,
+                    p.[Name] AS [name],
+                    p.Email AS email
+                FROM Feedback.Session_presenters AS sp
+                INNER JOIN Feedback.Presenters AS p ON sp.Presented_by_ID=p.Presenter_ID
+                WHERE sp.Session_ID IN (
+                    SELECT Session_ID
+                    FROM Feedback.[Sessions]
+                    WHERE Event_ID=@Event_ID)
+                FOR JSON PATH) AS presenters,
+
+            (SELECT q.Question_ID AS questionId,
+                    q.Display_order AS displayOrder,
+                    q.Question AS [text],
+                    q.[Type] AS [type],
+                    q.Optimal_percent AS optimalValue,
+
+                    (SELECT ao.Answer_option_ID AS optionId,
+                            ao.Answer_ordinal AS ordinal,
+                            ao.Percent_value AS [percent],
+                            ao.Annotation AS annotation
+                        FROM Feedback.Answer_options AS ao
+                        WHERE ao.Question_ID=q.Question_ID
+                        ORDER BY ao.Answer_ordinal
+                        FOR JSON PATH) AS options
+
+                FROM Feedback.Questions AS q
+                WHERE q.Event_ID=@Event_ID
+                FOR JSON PATH) AS questions,
+
+            (SELECT s.Session_ID AS sessionId,
+                    s.Sessionize_id AS sessionizeId,
+                    s.Title AS title,
+
+                    (SELECT sp.Presented_by_ID AS presenterId,
+                            sp.Is_session_owner AS isOwner
+                        FROM Feedback.Session_Presenters AS sp
+                        WHERE sp.Session_ID=s.Session_ID
+                        FOR JSON PATH) AS presenters,
+
+                    (SELECT r.Created AS created,
+                            r.Updated AS updated,
+
+                            (SELECT ra.Answer_option_ID AS optionId
+                                FROM Feedback.Response_Answers AS ra
+                                WHERE ra.Response_ID=r.Response_ID
+                                FOR JSON PATH) AS answers,
+
+                            (SELECT rp.Plaintext AS [text]
+                                FROM Feedback.Response_Plaintext AS rp
+                                WHERE rp.Response_ID=r.Response_ID
+                                FOR JSON PATH) AS textAnswers
+
+                        FROM Feedback.Responses AS r
+                        WHERE r.Session_ID=s.Session_ID
+                        FOR JSON PATH) AS responses
+
+                FROM Feedback.[Sessions] AS s
+                WHERE s.Event_ID=@Event_ID
+                FOR JSON PATH) AS [sessions]
+
+        FROM Feedback.[Events] AS e
+        WHERE e.Event_ID=@Event_ID
+          AND e.Event_secret=@Event_secret
+        FOR JSON AUTO, WITHOUT_ARRAY_WRAPPER) AS Report_blob;
 
 GO

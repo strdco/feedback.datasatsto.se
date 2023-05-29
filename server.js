@@ -113,14 +113,7 @@ app.listen(serverPort, () => console.log('READY.'));
 app.get('/', function (req, res, next) {
 
     httpHeaders(res);
-console.log('WAT');
-    res.status(404).sendFile('error.html', sendFileOptions('/'), function(err) {
-        if (err) {
-            res.sendStatus(404);
-            return;
-        }
-    });
-
+    res.redirect('/admin');
     return;
 
 });
@@ -288,11 +281,20 @@ async function createQrFile(file, url) {
 
 
 /*-----------------------------------------------------------------------------
-  Admin page
+  Report
   ---------------------------------------------------------------------------*/
 
-app.get('/data/:secretkey', function(req, res, next) {
-    res.status(200).send('TODO');
+app.get('/api/report/:eventsecret', async function(req, res, next) {
+    httpHeaders(res);
+
+    try {
+        const report=await getReport(req.params.eventsecret);
+        res.status(200).send(report);
+    } catch(e) {
+        console.log(e);
+        res.status(401).send();
+    }
+
 });
 
 
@@ -303,7 +305,7 @@ app.get('/data/:secretkey', function(req, res, next) {
   TODO: Parameter for how long a session accepts responses
   ---------------------------------------------------------------------------*/
 
-app.get('/import-from-sessionize', function(req, res, next) {
+app.get('/import', function(req, res, next) {
     httpHeaders(res);
 
     res.status(200).sendFile('import-from-sessionize.html', sendFileOptions('/', 60 * 60 * 1000), function(err) {
@@ -699,6 +701,23 @@ async function adminEventInfo(eventSecret) {
             function(recordset) {
                 try {
                     var blob = JSON.parse(recordset.data[0].Event_blob);
+                    resolve(blob);
+                } catch(e) {
+                    reject();
+                }
+            });
+        });
+}
+
+async function getReport(eventSecret) {
+
+    return new Promise((resolve, reject) => {
+        cannedSql.sqlQuery(connectionString,
+            'EXECUTE Feedback.Get_Event_Report @Event_secret=@eventSecret;',
+            [   { "name": 'eventSecret', "type": cannedSql.Types.UniqueIdentifier, "value": eventSecret }],
+            function(recordset) {
+                try {
+                    var blob = JSON.parse(recordset.data[0].Report_blob);
                     resolve(blob);
                 } catch(e) {
                     reject();

@@ -9,14 +9,15 @@ IF (EXISTS (SELECT NULL FROM Feedback.[Events] WHERE Is_template=1 AND [Name]=@N
 DECLARE @Template_ID int, @Target_ID int, @Question_ID int;
 
 DECLARE @id TABLE (
-    Seq int IDENTITY(0, 1) NOT NULL,
-    ID int NOT NULL
+    Seq             int IDENTITY(0, 1) NOT NULL,
+    ID              int NOT NULL,
+    Event_secret    uniqueidentifier NULL
 );
 
 BEGIN TRANSACTION;
 
     --- Create the event
-    INSERT INTO @id (ID) EXECUTE Feedback.Create_Event @Name=@Name, @Is_template=1, @CSS=N'/data-saturdays.css';
+    INSERT INTO @id (ID, Event_secret) EXECUTE Feedback.Create_Event @Name=@Name, @Is_template=1, @CSS=N'/data-saturdays.css';
     SELECT @Template_ID=ID FROM @id WHERE Seq=0;
 
     --- 1.
