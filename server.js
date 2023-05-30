@@ -643,7 +643,7 @@ async function saveResponse(responseId, clientKey, questionId, answerOrdinal, pl
             'EXECUTE Feedback.Save_Response_Answer '+
                     '@Response_ID=@responseId, @Client_key=@clientKey, @Question_ID=@questionId, '+
                     '@Answer_ordinal=@answerOrdinal, @Plaintext=@plaintext;',
-            [   { "name": 'responseId',     "type": cannedSql.Types.Int,                "value": responseId },
+            [   { "name": 'responseId',     "type": cannedSql.Types.BigInt,             "value": responseId },
                 { "name": 'clientKey',      "type": cannedSql.Types.UniqueIdentifier,   "value": clientKey },
                 { "name": 'questionId',     "type": cannedSql.Types.Int,                "value": questionId },
                 { "name": 'answerOrdinal',  "type": cannedSql.Types.SmallInt,           "value": answerOrdinal },
@@ -660,7 +660,7 @@ async function listSessions(responseId, clientKey) {
         cannedSql.sqlQuery(connectionString,
             'EXECUTE Feedback.Get_Sessions '+
                     '@Response_ID=@responseId, @Client_key=@clientKey;',
-            [   { "name": 'responseId',     "type": cannedSql.Types.Int,                "value": responseId },
+            [   { "name": 'responseId',     "type": cannedSql.Types.BigInt,             "value": responseId },
                 { "name": 'clientKey',      "type": cannedSql.Types.UniqueIdentifier,   "value": clientKey }],
             function(recordset) {
                 try {

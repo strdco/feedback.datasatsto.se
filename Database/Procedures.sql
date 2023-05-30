@@ -1,3 +1,44 @@
+-------------------------------------------------------------------------------
+--- Generate a unique, random Session_ID
+-------------------------------------------------------------------------------
+
+CREATE OR ALTER PROCEDURE Feedback.New_Session_ID
+    @Session_ID bigint OUTPUT
+AS
+
+SET NOCOUNT ON;
+
+--- Generate a random ID.
+SELECT @Session_ID=ABS(CAST(CONVERT(varbinary(6), NEWID()) AS bigint));
+
+--- If the ID exists, try a new one.
+WHILE (EXISTS (SELECT NULL
+               FROM Feedback.[Sessions]
+               WHERE Session_ID=@Session_ID))
+    SELECT @Session_ID=ABS(CAST(CONVERT(varbinary(6), NEWID()) AS bigint));
+
+GO
+
+-------------------------------------------------------------------------------
+--- Generate a unique, random Response_ID
+-------------------------------------------------------------------------------
+
+CREATE OR ALTER PROCEDURE Feedback.New_Response_ID
+    @Response_ID bigint OUTPUT
+AS
+
+SET NOCOUNT ON;
+
+--- Generate a random ID.
+SELECT @Response_ID=ABS(CAST(CONVERT(varbinary(6), NEWID()) AS bigint));
+
+--- If the ID exists, try a new one.
+WHILE (EXISTS (SELECT NULL
+               FROM Feedback.Responses
+               WHERE Response_ID=@Response_ID))
+    SELECT @Response_ID=ABS(CAST(CONVERT(varbinary(6), NEWID()) AS bigint));
+
+GO
 
 -------------------------------------------------------------------------------
 ---
@@ -235,39 +276,47 @@ AS
 
 SET NOCOUNT ON;
 
+DECLARE @Session_ID bigint;
+
 IF (NOT EXISTS (SELECT NULL FROM Feedback.My_Events WHERE Event_ID=@Event_ID))
     THROW 50001, 'Event not found or you do not have access to it.', 1;
 
---- Create a new session:
-IF (@Sessionize_id IS NULL)
-    INSERT INTO Feedback.[Sessions] (Event_ID, Title)
-    OUTPUT inserted.Session_ID
-    VALUES (@Event_ID, @Title);
+BEGIN TRANSACTION;
 
---- If it's a Sessionize session, we can upsert it using the Sessionize ID:
-IF (@Sessionize_id IS NOT NULL) BEGIN;
+    EXECUTE Feedback.New_Session_ID @Session_ID=@Session_ID OUTPUT;
 
-    --- But to make everything work, we need to delete all the presenters
-    --- for the session. Don't worry, though. We'll add them back in a moment.
-    DELETE sp
-    FROM Feedback.Session_Presenters AS sp
-    INNER JOIN Feedback.[Sessions] AS s ON sp.Session_ID=s.Session_ID
-    WHERE s.Sessionize_id=@Sessionize_id
-      AND s.Event_ID=@Event_ID;
+    --- Create a new session:
+    IF (@Sessionize_id IS NULL)
+        INSERT INTO Feedback.[Sessions] (Event_ID, Title)
+        OUTPUT inserted.Session_ID
+        VALUES (@Event_ID, @Title);
 
-    MERGE INTO Feedback.[Sessions] AS s
-    USING (SELECT NULL AS n) AS x ON s.Sessionize_id=@Sessionize_id AND s.Event_ID=@Event_ID
+    --- If it's a Sessionize session, we can upsert it using the Sessionize ID:
+    IF (@Sessionize_id IS NOT NULL) BEGIN;
 
-    WHEN MATCHED THEN
-        UPDATE SET s.Title=@Title
+        --- But to make everything work, we need to delete all the presenters
+        --- for the session. Don't worry, though. We'll add them back in a moment.
+        DELETE sp
+        FROM Feedback.Session_Presenters AS sp
+        INNER JOIN Feedback.[Sessions] AS s ON sp.Session_ID=s.Session_ID
+        WHERE s.Sessionize_id=@Sessionize_id
+        AND s.Event_ID=@Event_ID;
 
-    WHEN NOT MATCHED BY TARGET THEN
-        INSERT (Event_ID, Title, Sessionize_id)
-        VALUES (@Event_ID, @Title, @Sessionize_id)
-        
-    OUTPUT inserted.Session_ID;
+        MERGE INTO Feedback.[Sessions] AS s
+        USING (SELECT NULL AS n) AS x ON s.Sessionize_id=@Sessionize_id AND s.Event_ID=@Event_ID
 
-END;
+        WHEN MATCHED THEN
+            UPDATE SET s.Title=@Title
+
+        WHEN NOT MATCHED BY TARGET THEN
+            INSERT (Session_ID, Event_ID, Title, Sessionize_id)
+            VALUES (@Session_ID, @Event_ID, @Title, @Sessionize_id)
+            
+        OUTPUT inserted.Session_ID;
+
+    END;
+
+COMMIT TRANSACTION;
 
 GO
 
@@ -535,21 +584,29 @@ CREATE OR ALTER PROCEDURE Feedback.Init_Response
     @Session_ID         bigint
 AS
 
+DECLARE @Response_ID bigint;
+
 DECLARE @id TABLE (
     Client_key      uniqueidentifier NOT NULL,
-    Response_ID     int NOT NULL
+    Response_ID     bigint NOT NULL
 );
 
-INSERT INTO Feedback.Responses (Session_ID, Created, Updated)
-OUTPUT inserted.Client_key, inserted.Response_ID INTO @id (Client_key, Response_ID)
-SELECT s.Session_ID, SYSUTCDATETIME() AS Created, SYSUTCDATETIME() AS Created
-FROM Feedback.[Sessions] AS s
-INNER JOIN Feedback.Events AS e ON s.Event_ID=e.Event_ID
-WHERE s.Session_ID=@Session_ID
-  AND ISNULL(e.Accepts_responses_from, {d '2000-01-01'})<SYSDATETIME()
-  AND ISNULL(e.Accepts_responses_to, {d '2099-12-31'})>SYSDATETIME();
+BEGIN TRANSACTION;
 
-IF (@@ROWCOUNT=0) BEGIN;
+    EXECUTE Feedback.New_Response_ID @Response_ID=@Response_ID OUTPUT;
+
+    INSERT INTO Feedback.Responses (Response_ID, Session_ID, Created, Updated)
+    OUTPUT inserted.Client_key, inserted.Response_ID INTO @id (Client_key, Response_ID)
+    SELECT @response_ID, s.Session_ID, SYSUTCDATETIME() AS Created, SYSUTCDATETIME() AS Created
+    FROM Feedback.[Sessions] AS s
+    INNER JOIN Feedback.Events AS e ON s.Event_ID=e.Event_ID
+    WHERE s.Session_ID=@Session_ID
+    AND ISNULL(e.Accepts_responses_from, {d '2000-01-01'})<SYSDATETIME()
+    AND ISNULL(e.Accepts_responses_to, {d '2099-12-31'})>SYSDATETIME();
+
+COMMIT TRANSACTION;
+
+IF (NOT (EXISTS (SELECT NULL FROM @id))) BEGIN;
     THROW 50001, 'Invalid session_id or this session is no longer accepting responses.', 1;
     RETURN;
 END;
@@ -618,7 +675,7 @@ GO
 -------------------------------------------------------------------------------
 
 CREATE OR ALTER PROCEDURE Feedback.Save_Response_Answer
-    @Response_ID            int,
+    @Response_ID            bigint,
     @Client_key             uniqueidentifier,
     @Question_ID            int,
     @Answer_ordinal         smallint=NULL,
@@ -717,7 +774,7 @@ GO
 -------------------------------------------------------------------------------
 
 CREATE OR ALTER PROCEDURE Feedback.Get_Sessions
-    @Response_ID            int=NULL,
+    @Response_ID            bigint=NULL,
     @Client_key             uniqueidentifier=NULL,
     @Presenter_ID           int=NULL,
     @Event_ID               int=NULL

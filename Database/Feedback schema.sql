@@ -138,7 +138,7 @@ CREATE TABLE Feedback.Answer_options (
 -------------------------------------------------
 
 CREATE TABLE Feedback.Responses (
-    Response_ID     int CONSTRAINT DF_Responses_ID DEFAULT (NEXT VALUE FOR Feedback.ID) NOT NULL,
+    Response_ID     bigint CONSTRAINT DF_Responses_ID DEFAULT (NEXT VALUE FOR Feedback.ID) NOT NULL,
     Session_ID      bigint NOT NULL,
     Client_key      uniqueidentifier CONSTRAINT DF_Response_key DEFAULT (NEWID()) NOT NULL,
     Created         datetime2(3) NOT NULL,
@@ -151,7 +151,7 @@ CREATE TABLE Feedback.Responses (
 -------------------------------------------------
 
 CREATE TABLE Feedback.Response_Answers (
-    Response_ID     int NOT NULL,
+    Response_ID     bigint NOT NULL,
     Question_ID     int NOT NULL,
     Answer_option_ID int NOT NULL,
     Created         datetime2(3) NOT NULL,
@@ -167,7 +167,7 @@ CREATE TABLE Feedback.Response_Answers (
 -------------------------------------------------
 
 CREATE TABLE Feedback.Response_Plaintext (
-    Response_ID     int NOT NULL,
+    Response_ID     bigint NOT NULL,
     Question_ID     int NOT NULL,
     Plaintext       nvarchar(max) NOT NULL,
     Created         datetime2(3) NOT NULL,
