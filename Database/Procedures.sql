@@ -636,6 +636,7 @@ SELECT (SELECT id.Client_key AS clientKey,
                id.Response_ID AS responseId,
                e.CSS AS css,
                s.Title AS title,
+               s.Event_ID AS eventId,
 
                --- Presenters:
                (SELECT p.Name AS [name]

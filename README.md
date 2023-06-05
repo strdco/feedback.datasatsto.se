@@ -14,6 +14,15 @@ Some of the design goals I had in mind:
 
 The goal for this solution is to be faster, easier, and cleaner than paper.
 
+# How to view the hosted web
+
+This web is published as:
+
+* feedback.datasatsto.se
+* eval.sqlsaturday.com
+
+If you want me to add a DNS alias for you, contact me and we'll get you set up.
+
 # Workflow
 
 * The oprganizer [imports sessions](#importing-from-sessionize) and speakers from Sessionize
@@ -50,6 +59,16 @@ To deploy to Azure Web Apps,
     * Make sure to set the build provider to "App Service Build Service", not "Github Actions".
 
 # Setting up an event
+
+## Designing your own stylesheet and header logo
+
+The repository comes with standard stylesheets and header logos for Data Saturday and SQL Saturday events. If you want to
+add a custom look-and-feel for your event, feel free to submit a pull request.
+
+* Copy one of the .css files and give it a good, descriptive filename.
+* Edit the contents to reflect your event's branding
+* Add your logo as a small, yet reasonably high resolution file (shoot for at least 300x300 px, but preferably more).
+* Create a pull request to the "test" branch.
 
 ## Importing from Sessionize
 
@@ -172,7 +191,8 @@ Creates or updates a **Response Answer** *or* a **Response Plaintext**.
 Lists sessions for
 
 * a **Response**, *or*
-* a **Presenter** and **Event**, depending on which parameters are given.
+* a **Presenter** and **Event**, *or*
+* a **Event**, depending on which parameters are given.
 
 This procedure is used either when an attendee lists other sessions to evaluate for an event, or
 in the admin interface overview.
@@ -208,10 +228,14 @@ Lists sessions with their respective QR codes.
 
 *Requires authentication with the Event secret.*
 
+## /event/{event id}
+
+Lists all sessions for an event. Replaces /sessions, as this is a much neater
+and easier URL to share to speakers and attendees.
+
 ## /sessions
 
-Lists all sessions for an event. This page inherits parameters from an existing
-**Response** that the attendee has filled out previously:
+Lists all sessions for an event. Deprecated - use /event/{event id} instead.
 
 Example: `/sessions?responseId=00000&clientKey=0000000-0000-0000-0000-000000000000`
 
