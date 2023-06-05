@@ -172,7 +172,8 @@ Creates or updates a **Response Answer** *or* a **Response Plaintext**.
 Lists sessions for
 
 * a **Response**, *or*
-* a **Presenter** and **Event**, depending on which parameters are given.
+* a **Presenter** and **Event**, *or*
+* a **Event**, depending on which parameters are given.
 
 This procedure is used either when an attendee lists other sessions to evaluate for an event, or
 in the admin interface overview.
@@ -208,10 +209,14 @@ Lists sessions with their respective QR codes.
 
 *Requires authentication with the Event secret.*
 
+## /event/{event id}
+
+Lists all sessions for an event. Replaces /sessions, as this is a much neater
+and easier URL to share to speakers and attendees.
+
 ## /sessions
 
-Lists all sessions for an event. This page inherits parameters from an existing
-**Response** that the attendee has filled out previously:
+Lists all sessions for an event. Deprecated - use /event/{event id} instead.
 
 Example: `/sessions?responseId=00000&clientKey=0000000-0000-0000-0000-000000000000`
 
