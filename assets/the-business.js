@@ -1,4 +1,3 @@
-    var clientKey;
     var responseId;
     var searchTimeout;
 
@@ -27,7 +26,6 @@
                 if (xhr.status == 200) {
                     try {
                         const blob=JSON.parse(xhr.response);
-                        clientKey = blob.clientKey;
                         responseId = blob.responseId;
                         renderHeader(blob);
                         renderQuestions(blob.questions);
@@ -300,7 +298,7 @@
         button.classList='done';
         button.innerText='Done';
         button.addEventListener('click', () => {
-            location.href='/sessions?responseId='+encodeURIComponent(responseId)+'&clientKey='+encodeURIComponent(clientKey);
+            location.href='/sessions?responseId='+encodeURIComponent(responseId);
         });
         footer.appendChild(button);
 
@@ -441,7 +439,6 @@
     function saveInput(questionId, answerOrdinal, plaintext) {
         var postBody=
             'responseId='+encodeURIComponent(responseId)+'&'+
-            'clientKey='+encodeURIComponent(clientKey)+'&'+
             'questionId='+encodeURIComponent(questionId)+'&'+
             'answerOrdinal='+encodeURIComponent(answerOrdinal)+'&'+
             'plaintext='+encodeURIComponent(plaintext);

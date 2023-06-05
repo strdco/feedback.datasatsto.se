@@ -164,7 +164,7 @@ app.post('/api/save', async function (req, res, next) {
     var answerOrdinal=parseInt(req.body.answerOrdinal) || null;
     var plaintext=req.body.plaintext;
 
-    var output=await saveResponse(responseId, clientKey, questionId, answerOrdinal, plaintext);
+    var output=await saveResponse(responseId, questionId, answerOrdinal, plaintext);
     if (output.error) {
         res.status(500).send({ "status": "error" });
     } else {
@@ -202,13 +202,12 @@ app.post('/api/sessions', async function (req, res, next) {
     httpHeaders(res);
 
     var responseId=parseInt(req.body.responseId);
-    var clientKey=req.body.clientKey;
     var presenterId=parseInt(req.body.presenterId);
     var eventId=req.body.eventId;
 
-    if (responseId && clientKey) {
+    if (responseId) {
         try {
-            res.status(200).send(await listSessions(responseId, clientKey));
+            res.status(200).send(await listSessions(responseId));
         } catch(e) {
             res.status(401).send();
         }
@@ -636,15 +635,14 @@ async function initResponse(sessionId) {
     });
 }
 
-async function saveResponse(responseId, clientKey, questionId, answerOrdinal, plaintext) {
+async function saveResponse(responseId, questionId, answerOrdinal, plaintext) {
 
     return new Promise((resolve, reject) => {
         cannedSql.sqlQuery(connectionString,
             'EXECUTE Feedback.Save_Response_Answer '+
-                    '@Response_ID=@responseId, @Client_key=@clientKey, @Question_ID=@questionId, '+
+                    '@Response_ID=@responseId, @Question_ID=@questionId, '+
                     '@Answer_ordinal=@answerOrdinal, @Plaintext=@plaintext;',
             [   { "name": 'responseId',     "type": cannedSql.Types.BigInt,             "value": responseId },
-                { "name": 'clientKey',      "type": cannedSql.Types.UniqueIdentifier,   "value": clientKey },
                 { "name": 'questionId',     "type": cannedSql.Types.Int,                "value": questionId },
                 { "name": 'answerOrdinal',  "type": cannedSql.Types.SmallInt,           "value": answerOrdinal },
                 { "name": 'plaintext',      "type": cannedSql.Types.NVarChar,           "value": plaintext }],
@@ -654,14 +652,13 @@ async function saveResponse(responseId, clientKey, questionId, answerOrdinal, pl
         });
 }
 
-async function listSessions(responseId, clientKey) {
+async function listSessions(responseId) {
 
     return new Promise((resolve, reject) => {
         cannedSql.sqlQuery(connectionString,
             'EXECUTE Feedback.Get_Sessions '+
-                    '@Response_ID=@responseId, @Client_key=@clientKey;',
-            [   { "name": 'responseId',     "type": cannedSql.Types.BigInt,             "value": responseId },
-                { "name": 'clientKey',      "type": cannedSql.Types.UniqueIdentifier,   "value": clientKey }],
+                    '@Response_ID=@responseId;',
+            [   { "name": 'responseId',     "type": cannedSql.Types.BigInt,             "value": responseId }],
             function(recordset) {
                 try {
                     var blob = JSON.parse(recordset.data[0].Sessions_blob);
