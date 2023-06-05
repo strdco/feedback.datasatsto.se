@@ -1,4 +1,25 @@
 -------------------------------------------------------------------------------
+--- Generate a unique, random Event_ID
+-------------------------------------------------------------------------------
+
+CREATE OR ALTER PROCEDURE Feedback.New_Event_ID
+    @Event_ID bigint OUTPUT
+AS
+
+SET NOCOUNT ON;
+
+--- Generate a random ID.
+SELECT @Event_ID=ABS(CAST(CONVERT(varbinary(3), NEWID()) AS bigint));
+
+--- If the ID exists, try a new one.
+WHILE (EXISTS (SELECT NULL
+               FROM Feedback.Events
+               WHERE Event_ID=@Event_ID))
+    SELECT @Event_ID=ABS(CAST(CONVERT(varbinary(6), NEWID()) AS bigint));
+
+GO
+
+-------------------------------------------------------------------------------
 --- Generate a unique, random Session_ID
 -------------------------------------------------------------------------------
 
@@ -85,6 +106,7 @@ IF (EXISTS (SELECT NULL
 END;
 
 DECLARE @Event_ID int;
+EXECUTE Feedback.New_Event_ID @Event_ID=@Event_ID OUTPUT;
 
 --- Create new event:
 DECLARE @event TABLE (
@@ -113,16 +135,17 @@ END;
 
 --- Create a brand new event
 IF (@From_template_Event_ID IS NULL)
-    INSERT INTO Feedback.[Events] ([Name], CSS, Is_template, Accepts_responses_from, Accepts_responses_to)
+    INSERT INTO Feedback.[Events] (Event_ID, [Name], CSS, Is_template, Accepts_responses_from, Accepts_responses_to)
     OUTPUT inserted.Event_ID, inserted.Event_secret INTO @event (Event_ID, Event_secret)
-    VALUES (@Name, @CSS, @Is_template, @Accepts_responses_from, @Accepts_responses_to);
+    VALUES (@Event_ID, @Name, @CSS, @Is_template, @Accepts_responses_from, @Accepts_responses_to);
 
 --- Copy a template event
 IF (@From_template_Event_ID IS NOT NULL) BEGIN;
     --- Feedback.Events
-    INSERT INTO Feedback.[Events] ([Name], CSS, Is_template, Accepts_responses_from, Accepts_responses_to, Sessionize_API_key)
+    INSERT INTO Feedback.[Events] (Event_ID, [Name], CSS, Is_template, Accepts_responses_from, Accepts_responses_to, Sessionize_API_key)
     OUTPUT inserted.Event_ID, inserted.Event_secret INTO @event (Event_ID, Event_secret)
-    SELECT ISNULL(@Name, [Name]),
+    SELECT @Event_ID,
+           ISNULL(@Name, [Name]),
            ISNULL(@CSS, CSS),
            @Is_template AS Is_template,
            @Accepts_responses_from,
@@ -130,8 +153,6 @@ IF (@From_template_Event_ID IS NOT NULL) BEGIN;
            @Sessionize_API_key
     FROM Feedback.Events
     WHERE Event_ID=@From_template_Event_ID;
-
-    SELECT @Event_ID=Event_ID FROM @event;
 
     --- Feedback.Questions
     MERGE INTO Feedback.Questions AS new
@@ -676,7 +697,7 @@ GO
 
 CREATE OR ALTER PROCEDURE Feedback.Save_Response_Answer
     @Response_ID            bigint,
-    @Client_key             uniqueidentifier,
+    @Client_key             uniqueidentifier=NULL,
     @Question_ID            int,
     @Answer_ordinal         smallint=NULL,
     @Plaintext              nvarchar(max)=NULL
@@ -694,7 +715,7 @@ BEGIN TRANSACTION;
         INNER JOIN Feedback.Questions AS q ON ra.Question_ID=q.Question_ID
         INNER JOIN Feedback.Answer_options AS ao ON q.Question_ID=ao.Question_ID AND ra.Answer_option_ID=ao.Answer_Option_ID
         WHERE r.Response_ID=@Response_ID
-          AND r.Client_key=@Client_key
+        --AND r.Client_key=@Client_key
           AND q.[Type]='checkbox'
           AND ao.Answer_ordinal=-@Answer_ordinal;
     END;
@@ -708,7 +729,7 @@ BEGIN TRANSACTION;
             INNER JOIN Feedback.Questions AS q ON s.Event_ID=q.Event_ID
             INNER JOIN Feedback.Answer_options AS ao ON q.Question_ID=ao.Question_ID
             WHERE r.Response_ID=@Response_ID
-              AND r.Client_key=@Client_key
+            --AND r.Client_key=@Client_key
               AND q.Question_ID=@Question_ID
               AND ao.Answer_ordinal=@Answer_ordinal)
 
@@ -738,7 +759,7 @@ BEGIN TRANSACTION;
             INNER JOIN Feedback.[Sessions] AS s ON r.Session_ID=s.Session_ID
             INNER JOIN Feedback.Questions AS q ON s.Event_ID=q.Event_ID
             WHERE r.Response_ID=@Response_ID
-              AND r.Client_key=@Client_key
+            --AND r.Client_key=@Client_key
               AND q.Question_ID=@Question_ID)
 
         MERGE INTO Feedback.Response_Plaintext AS rp
@@ -782,10 +803,10 @@ AS
 
 SET NOCOUNT ON;
 
-IF (NOT (@Response_ID IS NOT NULL AND @Client_key IS NOT NULL AND @Presenter_ID IS NULL AND @Event_ID IS NULL
+IF (NOT (@Response_ID IS NOT NULL /*AND @Client_key IS NOT NULL*/ AND @Presenter_ID IS NULL AND @Event_ID IS NULL
          OR
-         @Response_ID IS NULL AND @Client_key IS NULL AND @Presenter_ID IS NOT NULL AND @Event_ID IS NOT NULL)) BEGIN;
-    THROW 50001, 'This proc requires (@Response_ID, @Client_key) or (@Presenter_ID, @Event_ID).', 1;
+         @Response_ID IS NULL /*AND @Client_key IS NULL*/ AND @Presenter_ID IS NOT NULL AND @Event_ID IS NOT NULL)) BEGIN;
+    THROW 50001, 'This proc requires (@Response_ID) or (@Presenter_ID, @Event_ID).', 1;
     RETURN;
 END;
 
@@ -803,12 +824,13 @@ SELECT (SELECT s.Session_ID AS sessionId,
         FROM Feedback.[Sessions] AS s
         INNER JOIN Feedback.Events AS e ON s.Event_ID=e.Event_ID
 
-        WHERE --- Option 1: Filtering on (@Response_ID, @Client_key)
+        WHERE --- Option 1: Filtering on (@Response_ID)
               s.Event_ID IN (SELECT s.Event_ID
                              FROM Feedback.Responses AS r
                              INNER JOIN Feedback.[Sessions] AS s ON r.Session_ID=s.Session_ID
                              WHERE r.Response_ID=@Response_ID
-                               AND r.Client_key=@Client_key)
+                             --AND r.Client_key=@Client_key
+                               )
 
               --- Option 2: Filtering on (@Presenter_ID, @Event_ID)
            OR s.Session_ID IN (SELECT s.Session_ID
