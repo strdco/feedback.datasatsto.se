@@ -1,4 +1,5 @@
     var responseId;
+    var eventId;
     var searchTimeout;
 
 /*
@@ -27,6 +28,7 @@
                     try {
                         const blob=JSON.parse(xhr.response);
                         responseId = blob.responseId;
+                        eventId = blob.eventId;
                         renderHeader(blob);
                         renderQuestions(blob.questions);
                         renderFooter();
@@ -47,7 +49,8 @@
         // If we're listing sessions to review,
         // or listing sessions for one speaker:
         //---------------------------------------------------------------------
-        if (docPath=='sessions' || docPath=='speaker') {
+        console.log('docPath', docPath);
+        if (docPath=='sessions' || docPath=='speaker' || docPath.substring(0, 6)=='event/') {
             var xhr = new XMLHttpRequest();
             xhr.open('POST', '/api/sessions');
             xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
@@ -61,13 +64,25 @@
                         renderSessionList(blob);
                     }
 
+                    if (docPath.substring(0, 6)=='event/') {
+                        renderSessionHeader(blob[0].css);
+                        renderSessionList(blob);
+                    }
+
                     if (docPath=='speaker') {
                         renderSpeakerPage(blob);
                     }
                 }
             }
 
-            xhr.send(document.location.search.substring(1));
+            if (document.location.pathname.substring(0, 7)=='/event/') {
+                // /event/000000
+                console.log('eventId='+encodeURIComponent(document.location.pathname.split('/')[2]));
+                xhr.send('eventId='+encodeURIComponent(document.location.pathname.split('/')[2]));
+            } else {
+                // /sessions?responseId=0000000000
+                xhr.send(document.location.search.substring(1));
+            }
         }
 
 
@@ -157,7 +172,7 @@
         var input=document.createElement('input');
         input.classList.add('secret-key');
         input.type='password';
-        input.placeholder='Please authenticate using your event key.';
+        input.placeholder='Please authenticate using your event secret key.';
         input.addEventListener("keyup", (e) => {
             //e.preventDefault();
             if (e.code=='Enter' && e.target.value) {
@@ -203,6 +218,40 @@
                 document.querySelector('link#dynamiccss').href=blob.css || '/blank.css';
                 document.getElementsByClassName('header')[0].style.display='';
 
+
+
+                var div=document.createElement('div');
+                div.classList.add('header');
+
+                // Add the QR code image,
+                var img=document.createElement('img');
+                img.classList.add('qr');
+                img.src=document.location.protocol.replace(':', '')+'://'+document.location.host+'/qr/event/'+blob.eventId;
+                img.addEventListener('click', copyItemToClipboard);
+                div.appendChild(img);
+
+                // ... the name of the event,
+                var span=document.createElement('span');
+                span.classList.add('title');
+                span.innerText=blob.name;
+                div.appendChild(span);
+
+                // ... and the URL
+                var a=document.createElement('a');
+                a.innerText=document.location.protocol.replace(':', '')+'://'+document.location.host+'/event/'+blob.eventId;
+                a.href=document.location.protocol.replace(':', '')+'://'+document.location.host+'/event/'+blob.eventId;
+                a.target='_new';
+                a.addEventListener('click', copyItemToClipboard);
+                div.appendChild(a);
+
+                document.body.appendChild(div);
+
+
+
+
+
+
+
                 if (!blob.sessions) {
                     showStatus('This event does not have any sessions.', 'bad');
                     return;
@@ -215,6 +264,7 @@
 
                     // Add the QR code image,
                     var img=document.createElement('img');
+                    img.classList.add('qr');
                     img.src=document.location.protocol.replace(':', '')+'://'+document.location.host+'/qr/'+session.sessionId;
                     img.addEventListener('click', copyItemToClipboard);
                     div.appendChild(img);
@@ -298,7 +348,8 @@
         button.classList='done';
         button.innerText='Done';
         button.addEventListener('click', () => {
-            location.href='/sessions?responseId='+encodeURIComponent(responseId);
+            //location.href='/sessions?responseId='+encodeURIComponent(responseId);
+            location.href='/event/'+encodeURIComponent(eventId);
         });
         footer.appendChild(button);
 
