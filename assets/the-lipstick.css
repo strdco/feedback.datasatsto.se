@@ -424,7 +424,8 @@ html {
 
     /* Title of a session in the session list page: */
 
-    .session .title {
+    .session .title,
+    .header .title {
         display: block;
     }
 
@@ -438,8 +439,7 @@ body.admin-page .session a {
     cursor: copy;
 }
 
-body.admin-page .session img,
-body.speaker-page .session img {
+img.qr {
     display: block;
     padding-top: 1em;
     padding-bottom: 2em;

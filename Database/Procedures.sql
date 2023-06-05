@@ -803,10 +803,12 @@ AS
 
 SET NOCOUNT ON;
 
-IF (NOT (@Response_ID IS NOT NULL /*AND @Client_key IS NOT NULL*/ AND @Presenter_ID IS NULL AND @Event_ID IS NULL
+IF (NOT (@Response_ID IS NOT NULL AND @Presenter_ID IS NULL AND @Event_ID IS NULL
          OR
-         @Response_ID IS NULL /*AND @Client_key IS NULL*/ AND @Presenter_ID IS NOT NULL AND @Event_ID IS NOT NULL)) BEGIN;
-    THROW 50001, 'This proc requires (@Response_ID) or (@Presenter_ID, @Event_ID).', 1;
+         @Response_ID IS NULL AND @Presenter_ID IS NOT NULL AND @Event_ID IS NOT NULL
+         OR
+         @Response_ID IS NULL AND @Presenter_ID IS NULL AND @Event_ID IS NOT NULL)) BEGIN;
+    THROW 50001, 'This proc requires (@Response_ID) or (@Presenter_ID, @Event_ID) or (@Event_ID).', 1;
     RETURN;
 END;
 
@@ -838,6 +840,9 @@ SELECT (SELECT s.Session_ID AS sessionId,
                                INNER JOIN Feedback.[Sessions] AS s ON sp.Session_ID=s.Session_ID
                                WHERE sp.Presented_by_ID=@Presenter_ID
                                  AND s.Event_ID=@Event_ID)
+
+              --- Option 3: Filtering on (@Event_ID)
+           OR s.Event_ID=@Event_ID
 
         ORDER BY s.Title
         FOR JSON PATH

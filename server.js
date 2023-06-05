@@ -107,6 +107,25 @@ app.listen(serverPort, () => console.log('READY.'));
 
 
 
+/*-----------------------------------------------------------------------------
+  Serve up the blank template page. "the-business.js" will perform the
+  appropriate action on the browser side, depending on the URL.
+  ---------------------------------------------------------------------------*/
+
+function sendTemplate(req, res, next) {
+    httpHeaders(res);
+
+    res.status(200).sendFile('template.html', sendFileOptions('/', 60 * 60 * 1000), function(err) {
+        if (err) {
+            res.sendStatus(404);
+            return;
+        }
+    });
+
+    return;
+}
+
+
 
 /*-----------------------------------------------------------------------------
   Default URL: redirect to the admin page.
@@ -125,23 +144,11 @@ app.get('/', function (req, res, next) {
 
 
 
-
 /*-----------------------------------------------------------------------------
   Evaluate a new session
   ---------------------------------------------------------------------------*/
 
-app.get('/:sessionid([0-9]*)', function (req, res, next) {
-    httpHeaders(res);
-
-    res.status(200).sendFile('template.html', sendFileOptions('/', 60 * 60 * 1000), function(err) {
-        if (err) {
-            res.sendStatus(404);
-            return;
-        }
-    });
-
-    return;
-});
+app.get('/:sessionid([0-9]*)', sendTemplate);
 
 // Get the questions and answer options for a session
 app.get('/api/create-response/:sessionid', async function (req, res, next) {
@@ -185,35 +192,40 @@ app.post('/api/save', async function (req, res, next) {
   Users arrive here when they click the "Done" button on the eval form.
   ---------------------------------------------------------------------------*/
 
-app.get('/sessions', function(req, res, next) {
-    httpHeaders(res);
-
-    res.status(200).sendFile('template.html', sendFileOptions('/', 60 * 60 * 1000), function(err) {
-        if (err) {
-            res.sendStatus(404);
-            return;
-        }
-    });
-
-    return;
-});
+app.get('/event/:eventId([0-9]*)', sendTemplate);
+app.get('/sessions', sendTemplate);
 
 app.post('/api/sessions', async function (req, res, next) {
     httpHeaders(res);
 
     var responseId=parseInt(req.body.responseId);
     var presenterId=parseInt(req.body.presenterId);
-    var eventId=req.body.eventId;
+    var eventId=parseInt(req.body.eventId);
 
+    // Option 1: Finding sessions in the same event as your last responseId:
+    // (legacy, deprecated)
     if (responseId) {
         try {
             res.status(200).send(await listSessions(responseId));
         } catch(e) {
             res.status(401).send();
         }
-    } else if (presenterId && eventId) {
+    }
+    
+    // Option 2: Finding sessions for one speaker, one event:
+    // (not yet implemented)
+    else if (presenterId && eventId) {
         try {
             res.status(200).send(await listPresenterSessions(presenterId, eventId));
+        } catch(e) {
+            res.status(401).send();
+        }
+    }
+
+    // Option 3: Finding sessions for an eventId:
+    else if (eventId) {
+        try {
+            res.status(200).send(await listSessionsByEvent(eventId));
         } catch(e) {
             res.status(401).send();
         }
@@ -235,18 +247,7 @@ app.post('/api/sessions', async function (req, res, next) {
   name, and a URL to the evaluation form.
   ---------------------------------------------------------------------------*/
 
-app.get('/admin', function(req, res, next) {
-    httpHeaders(res);
-
-    res.status(200).sendFile('template.html', sendFileOptions('/', 60 * 60 * 1000), function(err) {
-        if (err) {
-            res.sendStatus(404);
-            return;
-        }
-    });
-
-    return;
-});
+app.get('/admin', sendTemplate);
 
 // Get list of sessions for the event.
 app.post('/api/get-admin-sessions', async function (req, res, next) {
@@ -272,7 +273,7 @@ app.post('/api/get-admin-sessions', async function (req, res, next) {
   QR code stuff
   ---------------------------------------------------------------------------*/
 
-// Send the QR code for this 
+// Send the QR code for this session 
 app.get('/qr/:sessionid([0-9]*)', async function (req, res, next) {
 
     const dir=__dirname+'/qr';
@@ -299,6 +300,32 @@ app.get('/qr/:sessionid([0-9]*)', async function (req, res, next) {
     });
 });
 
+// Send the QR code for this event 
+app.get('/qr/event/:eventid([0-9]*)', async function (req, res, next) {
+
+    const dir=__dirname+'/qr';
+    if (!fs.existsSync(dir)) { fs.mkdirSync(dir); }
+
+    const file=dir+'/event-'+req.params.eventid+'.png';
+    const url='https://'+req.headers.host+'/event/'+req.params.eventid;
+
+    // Create the PNG file:
+    if (!fs.existsSync(file)) {
+        try {
+            await createQrFile(file, url);
+        } catch(e) {
+            console.log(e);
+        }
+    }
+
+    // ... and return it to the client:
+    res.sendFile('/qr/event-'+req.params.eventid+'.png', sendFileOptions('/', 60 * 60 * 1000), function(err) {
+        if (err) {
+            res.sendStatus(404);
+            return;
+        }
+    });
+});
 
 // Generate the QR code image file:
 async function createQrFile(file, url) {
@@ -659,6 +686,23 @@ async function listSessions(responseId) {
             'EXECUTE Feedback.Get_Sessions '+
                     '@Response_ID=@responseId;',
             [   { "name": 'responseId',     "type": cannedSql.Types.BigInt,             "value": responseId }],
+            function(recordset) {
+                try {
+                    var blob = JSON.parse(recordset.data[0].Sessions_blob);
+                    resolve(blob);
+                } catch(e) {
+                    reject();
+                }
+            });
+        });
+}
+
+async function listSessionsByEvent(eventId) {
+
+    return new Promise((resolve, reject) => {
+        cannedSql.sqlQuery(connectionString,
+            'EXECUTE Feedback.Get_Sessions @Event_ID=@eventId;',
+            [   { "name": 'eventId', "type": cannedSql.Types.Int, "value": eventId }],
             function(recordset) {
                 try {
                     var blob = JSON.parse(recordset.data[0].Sessions_blob);
