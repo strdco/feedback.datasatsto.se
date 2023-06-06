@@ -49,7 +49,6 @@
         // If we're listing sessions to review,
         // or listing sessions for one speaker:
         //---------------------------------------------------------------------
-        console.log('docPath', docPath);
         if (docPath=='sessions' || docPath=='speaker' || docPath.substring(0, 6)=='event/') {
             var xhr = new XMLHttpRequest();
             xhr.open('POST', '/api/sessions');
