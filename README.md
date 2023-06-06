@@ -49,7 +49,7 @@ In the database,
 To deploy to Azure Web Apps,
 
 * Create an Azure Web App
-    * Runtime stack: Node, version 12 or newer
+    * Runtime stack: Node. Version ~18 is the most recent at the time of writing this.
 * Under Configuration, add the following Application Settings (environment variables)
     * dbserver: the qualified name of the SQL instance
     * dblogin: the name of the SQL security principal

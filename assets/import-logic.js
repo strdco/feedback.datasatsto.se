@@ -5,6 +5,11 @@ window.onload = function whatsUp() {
     // Add an event handler to the "Import" button:
     document.getElementById('doImport').addEventListener('click', doImport);
 
+    importTemplates();
+    importStylesheets();
+}
+
+function importTemplates() {
 
     // Populate the template dropdown:
     var select=document.getElementById("template");
@@ -36,14 +41,55 @@ window.onload = function whatsUp() {
     xhr.open('GET', '/api/get-templates');
     xhr.send();
 
+    // Add an event handler to the template dropdown:
+    select.addEventListener('change', (e) => {
+        if (e.target.value) {
+            var cssSelect=document.querySelector('select#css');
+            cssSelect.value=templateList.filter(template => template.name==e.target.value)[0].css;
+            cssSelect.dispatchEvent(new Event('change'));
+        }
+    });
+}
+
+function importStylesheets() {
+
+    // Populate the template dropdown:
+    var select=document.getElementById("css");
+    var xhr = new XMLHttpRequest();
+
+    xhr.onload = function() {
+        if (xhr.status == 200) {
+            try {
+
+                const stylesheets=JSON.parse(xhr.response);
+                for (const stylesheet of stylesheets) {
+                    var option=document.createElement('option');
+                    option.value=stylesheet;
+                    option.innerText=stylesheet;
+                    select.appendChild(option);
+                }
+
+            } catch(err) {
+                // TODO
+                console.log(err);
+            }
+        }
+    }
+
+    xhr.open('GET', '/api/get-stylesheets');
+    xhr.send();
 
     // Add an event handler to the template dropdown:
     select.addEventListener('change', (e) => {
         if (e.target.value) {
-            document.querySelector('link#dynamiccss').href=templateList.filter(css => css.name==e.target.value)[0].css;
+            document.querySelector('link#dynamiccss').href=e.target.value;
         }
     });
+
 }
+
+
+
 
 
 function showStatus(statusText, cssClass) {
@@ -81,6 +127,7 @@ function doImport() {
     var apikey=document.getElementById('sessionizekey');
     var templateName=document.getElementById('template');
     var masterPassword=document.getElementById('masterPassword');
+    var css=document.getElementById('css');
 
     var theButton=document.getElementsByTagName('button')[0];
 
@@ -106,7 +153,8 @@ function doImport() {
         'eventName='+encodeURIComponent(eventName.value)+'&'+
         'apikey='+encodeURIComponent(apikey.value)+'&'+
         'templateName='+encodeURIComponent(templateName.value)+'&'+
-        'masterPassword='+encodeURIComponent(masterPassword.value);
+        'masterPassword='+encodeURIComponent(masterPassword.value)+'&'+
+        'css='+encodeURIComponent(css.value);
 
     var xhr = new XMLHttpRequest();
     xhr.open('POST', '/api/import-sessionize');

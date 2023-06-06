@@ -376,6 +376,20 @@ app.get('/api/get-templates', async function (req, res, next) {
 
 });
 
+// List all available .css files (stylesheets)
+app.get('/api/get-stylesheets', async function (req, res, next) {
+    httpHeaders(res);
+    var stylesheets=[];
+
+    fs.readdirSync(__dirname+'/assets/').forEach(file => {
+        if (file.endsWith('.css') && file!='the-lipstick.css') {
+            stylesheets.push('/'+file);
+        }
+    })
+
+    res.status(200).send(stylesheets);
+});
+
 // Perform the Sessionize import
 app.post('/api/import-sessionize', async function (req, res, next) {
 
@@ -383,6 +397,7 @@ app.post('/api/import-sessionize', async function (req, res, next) {
     var apikey=req.body.apikey.trim();
     var templateName=req.body.templateName;
     var masterPassword=req.body.masterPassword;
+    var css=req.body.css;
     
     if (!eventName) {
         res.status(401).send({ "status": "error", "message": "You need to specify an event name." });
@@ -418,7 +433,7 @@ app.post('/api/import-sessionize', async function (req, res, next) {
         return;
     }
 
-    var event=await createEvent(eventName, apikey, templateName);
+    var event=await createEvent(eventName, apikey, templateName, css);
 
     for (const session of sessions) {
 
@@ -582,19 +597,18 @@ function httpHeaders(res) {
   API functions
   ---------------------------------------------------------------------------*/
 
-async function createEvent(name, apikey, templateName) {
+async function createEvent(name, apikey, templateName, css) {
 
     return new Promise((resolve, reject) => {
         cannedSql.sqlQuery(connectionString,
-            'EXECUTE Feedback.Create_Event @Name=@name, @From_template_name=@templateName, @Sessionize_API_key=@apikey;',
+            'EXECUTE Feedback.Create_Event @Name=@name, @From_template_name=@templateName, @Sessionize_API_key=@apikey, @CSS=@css;',
             [   { "name": 'name',         "type": cannedSql.Types.NVarChar,   "value": name },
                 { "name": 'templateName', "type": cannedSql.Types.NVarChar,   "value": templateName },
-                { "name": 'apikey',       "type": cannedSql.Types.VarChar,    "value": apikey }],
+                { "name": 'apikey',       "type": cannedSql.Types.VarChar,    "value": apikey },
+                { "name": 'css',          "type": cannedSql.Types.NVarChar,   "value": css }],
             function(recordset) {
                 var eventId=recordset.data[0].Event_ID;
                 var eventSecret=recordset.data[0].Event_secret;
-
-console.log('recordset', { "eventId": eventId, "eventSecret": eventSecret });
 
                 resolve({ "eventId": eventId, "eventSecret": eventSecret });
             });
