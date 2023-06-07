@@ -32,6 +32,7 @@
                         renderHeader(blob);
                         renderQuestions(blob.questions);
                         renderFooter();
+                        renderFineprint();
                     } catch(err) {
                         showStatus('An unknown issue occurred. Sorry about that.', 'bad');
                     }
@@ -49,7 +50,6 @@
         // If we're listing sessions to review,
         // or listing sessions for one speaker:
         //---------------------------------------------------------------------
-        console.log('docPath', docPath);
         if (docPath=='sessions' || docPath=='speaker' || docPath.substring(0, 6)=='event/') {
             var xhr = new XMLHttpRequest();
             xhr.open('POST', '/api/sessions');
@@ -62,15 +62,18 @@
                     if (docPath=='sessions') {
                         renderSessionHeader(blob[0].css);
                         renderSessionList(blob);
+                        renderFineprint();
                     }
 
                     if (docPath.substring(0, 6)=='event/') {
                         renderSessionHeader(blob[0].css);
                         renderSessionList(blob);
+                        renderFineprint();
                     }
 
                     if (docPath=='speaker') {
                         renderSpeakerPage(blob);
+                        renderFineprint();
                     }
                 }
             }
@@ -581,6 +584,33 @@
             }
         })
     }
+
+
+
+/*
+ *
+ *
+ * ----------------------------------------------------------------------------
+ * Fine print.
+ * ----------------------------------------------------------------------------
+ * 
+ * 
+ */
+
+    function renderFineprint() {
+        var template=document.querySelector('div.fineprint.template');
+
+        if (template) {
+            var div=document.createElement('div');
+            div.classList.add('fineprint');
+            div.innerHTML=template.innerHTML;
+            document.body.appendChild(div);
+
+            template.remove();
+        }
+}
+
+
 
 
 

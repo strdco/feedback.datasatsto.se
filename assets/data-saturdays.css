@@ -62,7 +62,7 @@
         border-style: solid;
         border-width: 1px;
         border-color: var(--answer-border);
-        border-radius: 1em;
+        border-radius: 1rem;
     }
 
 
@@ -79,7 +79,7 @@
     }
 
     .question.bad, .question.avg, .question.good {
-        backdrop-filter: blur(1.5em);
+        backdrop-filter: blur(1.5rem);
         border-left-width: 4px;
         border-right-width: 1px;
         border-style: solid;
@@ -112,7 +112,7 @@
         background-color: var(--theme-color-1);
         color: var(--theme-white);
         font-weight: bold;
-        border-radius: 0.5em;
+        border-radius: 0.5rem;
         border-style: solid;
         border-width: 1px;
         border-color: var(--theme-border);

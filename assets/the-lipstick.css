@@ -32,8 +32,8 @@ html {
     body.sessions-page,
     body.speaker-page,
     body.admin-page {
-        padding-top: 4em;
-        padding-bottom: 1em;
+        padding-top: 4rem;
+        padding-bottom: 1rem;
         text-align: center;
     }
 
@@ -56,8 +56,8 @@ html {
     }
 
     body.speaker-page img.header-logo {
-        margin-top: -2em;
-        margin-bottom: 2em;
+        margin-top: -2rem;
+        margin-bottom: 2rem;
     }
 
 /* Popup status messages that appear and fade out automatically */
@@ -66,15 +66,15 @@ html {
         background-color: rgb(255, 220, 128);
         color: rgb(0, 0, 0);
         border-style: solid;
-        border-width: 1px 1px 1px 1em;
+        border-width: 1px 1px 1px 1rem;
         border-color: rgb(255, 200, 0);
-        border-top-right-radius: 0.5em;
-        border-bottom-right-radius: 0.5em;
-        font-size: 0.85em;
+        border-top-right-radius: 0.5rem;
+        border-bottom-right-radius: 0.5rem;
+        font-size: 0.85rem;
         position: fixed;
         margin: auto;
-        padding: 1em 4em 1em 4em;
-        top: 0.5em;
+        padding: 1rem 4rem 1rem 4rem;
+        top: 0.5rem;
         z-index: 100;
         opacity: 1.0;
     }
@@ -102,10 +102,10 @@ html {
 /* Standard "box" for the header, a question card, the footer,
    and session cards in the overview. */
 
-    .header, .question, .footer, .session {
-        padding: 2em 1em;
-        max-width: 30em;
-        min-height: 2em;
+    .header, .question, .footer, .session, .fineprint {
+        padding: 2rem 1rem;
+        max-width: 30rem;
+        min-height: 2rem;
         margin: 0 auto; /* center div horizontally */
         border-style: none solid dashed solid;
         border-width: 1px;
@@ -116,14 +116,14 @@ html {
        make sure they don't go all the way out to the edge */
 
     @media (max-width: 600px) {
-        .header, .question, .footer, .session {
-            margin: 0 1em;
+        .header, .question, .footer, .session, .fineprint {
+            margin: 0 1rem;
         }
     }
 
     .question, .session {
         background-color: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(0.25em);
+        backdrop-filter: blur(0.25rem);
         border-bottom-color: rgb(200, 200, 200);
         border-bottom-width: 1px;
     }
@@ -132,7 +132,7 @@ html {
 
     .header {
         background-color: var(--header-background);
-        backdrop-filter: blur(0.5em);
+        backdrop-filter: blur(0.5rem);
         margin-top: 1em;
         border-top-style: solid;
     }
@@ -166,7 +166,7 @@ html {
     }
 
     .footer button.done {
-        padding: 1em 4em;
+        padding: 1rem 4rem;
     }
 
     /* Gray out the button when it's disabled. */
@@ -184,10 +184,10 @@ html {
         position: absolute;
         display: block;
         content: "";
-        width: 0.75em;
-        height: 0.75em;
-        margin-left: 8em;
-        margin-top: -1.75em;
+        width: 0.75rem;
+        height: 0.75rem;
+        margin-left: 8rem;
+        margin-top: -1.75rem;
 
         z-index: 100;
         animation: rotating 1.0s linear infinite;
@@ -196,9 +196,9 @@ html {
         filter: saturate(1.0);
 
         border-style: solid;
-        border-width: 1em;
+        border-width: 1rem;
         border-color: rgb(0, 147, 221, 1.0) rgb(0, 147, 221, 0.8) rgb(0, 147, 221, 0.6) rgb(0, 147, 221, 0.4);
-        border-radius: 2em;
+        border-radius: 2rem;
 
         outline-style: dashed;
         outline-color: rgb(0, 147, 221, 1.0);
@@ -216,8 +216,8 @@ html {
         position: relative;
         border-top-style: solid;
         border-bottom-style: solid;
-        border-top-left-radius: 0.5em;
-        filter: drop-shadow(-0.1em 0.25em 0.5rem rgb(64, 64, 64, 0.25));
+        border-top-left-radius: 0.5rem;
+        filter: drop-shadow(-0.1rem 0.25rem 0.5rem rgb(64, 64, 64, 0.25));
     }
 
     .question.hidden, .session.hidden {
@@ -234,19 +234,19 @@ html {
     .question .question-text {
         display: block;
         font-weight: bold;
-        padding: 1em 0 0 0;
+        padding: 1rem 0 0 0;
     }
 
     .question.required .question-text::after {
         content: "*";
         color: rgb(255, 0, 0);
-        margin-left: 0.25em;
+        margin-left: 0.25rem;
     }
 
     .question .question-description {
         display: block;
         font-style: italic;
-        padding: 0.25em 0 0 0;
+        padding: 0.25rem 0 0 0;
     }
 
 /* Answers on question cards. */
@@ -255,27 +255,27 @@ html {
     select:focus {
         outline-style: solid;
         outline-color: var(--theme-color-1);
-        outline-offset: 0.5em;
+        outline-offset: 0.5rem;
     }
 
     input[type="radio"]:focus {
-        border-radius: 1em;
+        border-radius: 1rem;
     }
 
     .answers {
-        max-width: 30em;
+        max-width: 30rem;
         display: flex;
         flex-direction: row;
         justify-content: space-around;
-        row-gap: 0.5em;
-        margin-top: 1em;
+        row-gap: 0.5rem;
+        margin-top: 1rem;
     }
 
     .answers .answer {
         flex-grow: 1;
         text-align: center;
-        padding-top: 0.5em;
-        padding-bottom: 0.5em;
+        padding-top: 0.5rem;
+        padding-bottom: 0.5rem;
         border-radius: inherit;
     }
 
@@ -283,18 +283,18 @@ html {
         display: block;
         background-color: transparent;
         border-style: none;
-        padding-bottom: 1em;
+        padding-bottom: 1rem;
         border-radius: 0;
     }
 
     .answers.checkboxes .answer {
         width: 100%;
-        padding-top: 0.25em;
-        padding-bottom: 0.25em;
+        padding-top: 0.25rem;
+        padding-bottom: 0.25rem;
     }
 
     .answers.checkboxes .answer span {
-        padding: 0 0 0 0.5em;
+        padding: 0 0 0 0.5rem;
     }
 
     .answers .answer:hover {
@@ -316,7 +316,7 @@ html {
     }
 
     .answers.checkboxes label {
-        padding-left: 0.5em;
+        padding-left: 0.5rem;
     }
 
     .answers .answer label span {
@@ -330,7 +330,7 @@ html {
         display: flex;
         flex-direction: row;
         justify-content: space-between;
-        padding: 0.5em 0.5em 0 0.5em;
+        padding: 0.5rem 0.5rem 0 0.5rem;
     }
 
     .annotations .annotation {
@@ -350,10 +350,10 @@ html {
         width: 0;
         height: 0;
         position: absolute;
-        margin-left: -1.25em;
-        margin-top: 0.1em;
+        margin-left: -1.25rem;
+        margin-top: 0.1rem;
         border-color: transparent var(--answer-border) transparent transparent;
-        border-width: 0.5em;
+        border-width: 0.5rem;
         border-style: solid;
     }
 
@@ -367,29 +367,29 @@ html {
         content: "";
         width: 0;
         height: 0;
-        margin-left: 0.25em;
-        margin-top: 0.1em;
+        margin-left: 0.25rem;
+        margin-top: 0.1rem;
         position: absolute;
         border-color: transparent transparent transparent var(--answer-border);
-        border-width: 0.5em;
+        border-width: 0.5rem;
         border-style: solid;
     }
 
 /* Free-form text entry fields */
 
     .question textarea {
-        width: calc(100% - 0.5em);
-        min-width: calc(100% - 0.5em);
-        max-width: calc(100% - 0.5em);
-        min-height: 1em;
-        padding: 0.5em;
-        margin: 0.5em 0 0 -0.5em;
-        height: 2em;
+        width: calc(100% - 0.5rem);
+        min-width: calc(100% - 0.5rem);
+        max-width: calc(100% - 0.5rem);
+        min-height: 1rem;
+        padding: 0.5rem;
+        margin: 0.5rem 0 0 -0.5rem;
+        height: 2rem;
         transition: height 0.1s ease-out;
     }
 
     .question textarea:focus {
-        height: 7em;
+        height: 7rem;
         transition: height 0.1s ease-in;
         outline: solid var(--theme-color-1);
     }
@@ -398,11 +398,11 @@ html {
     .question input[type="text"],
     .question input[type="password"],
     .question select {
-        width: calc(100% - 0.5em);
-        min-width: calc(100% - 0.5em);
-        max-width: calc(100% - 0.5em);
-        padding: 0.5em;
-        margin: 0.5em 0 0 -0.5em;
+        width: calc(100% - 0.5rem);
+        min-width: calc(100% - 0.5rem);
+        max-width: calc(100% - 0.5rem);
+        padding: 0.5rem;
+        margin: 0.5rem 0 0 -0.5rem;
     }
     
 /* The search field at the top of the session list page,
@@ -410,10 +410,10 @@ html {
 
     body.sessions-page .search,
     body.admin-page .secret-key {
-        margin: 2em 0;
-        max-width: 30em;
+        margin: 2rem 0;
+        max-width: 30rem;
         width: 75%;
-        padding: 0.5em 1em 0.5em 1em;
+        padding: 0.5rem 1rem 0.5rem 1rem;
     }
 
     body.sessions-page .search:focus,
@@ -431,28 +431,53 @@ html {
 
 /* Admin page: list of sessions */
 
-body.admin-page .session {
-    text-align: center;
-}
+    body.admin-page .session {
+        text-align: center;
+    }
 
-body.admin-page .session a {
-    cursor: copy;
-}
+    body.admin-page .session a {
+        cursor: copy;
+    }
 
-img.qr {
-    display: block;
-    padding-top: 1em;
-    padding-bottom: 2em;
-    width: 16em;
-    height: 16em;
-    margin: auto;
-    cursor: copy;
-}
+    img.qr {
+        display: block;
+        padding-top: 1rem;
+        padding-bottom: 2rem;
+        width: 16rem;
+        height: 16rem;
+        margin: auto;
+        cursor: copy;
+    }
 
-body.admin-page .session span,
-body.admin-page .session a,
-body.speaker-page .session span,
-body.speaker-page .session a {
-    display: block;
-    margin-top: 0.5em;
-}
+    body.admin-page .session span,
+    body.admin-page .session a,
+    body.speaker-page .session span,
+    body.speaker-page .session a {
+        display: block;
+        margin-top: 0.5rem;
+    }
+
+/* The fine print footer */
+
+    .fineprint {
+        display: block;
+        width: 100%;
+        text-align: center;
+        border-style: none;
+        background-color:rgb(255, 255, 255, 0.80);
+        border-radius: 0.5rem;
+        font-size: 9pt;
+    }
+
+    .fineprint.template {
+        display: none;
+    }
+
+    .fineprint a:link,
+    .fineprint a:visited {
+        color: rgb(0, 0, 64);
+    }
+
+    .fineprint a:hover {
+        color: rgb(0, 0, 255);
+    }
