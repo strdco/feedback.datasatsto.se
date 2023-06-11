@@ -10,9 +10,7 @@
 
 */
 
-    const Connection = require('tedious').Connection;
-    const Request = require('tedious').Request;  
-    const Types = require('tedious').TYPES;
+    import { Connection, Request, TYPES as Types } from 'tedious';
 
     var printDebugInfo=false;
 
@@ -161,7 +159,4 @@
   
 
 
-    exports.printDebugInfo=printDebugInfo;
-    exports.sqlQuery=sqlQuery;
-    exports.parameterType=parameterType;
-    exports.Types=Types;
+    export { printDebugInfo, sqlQuery, parameterType, Types }
