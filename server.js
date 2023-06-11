@@ -3,20 +3,19 @@
 
 
 // Core modules:
-import { existsSync, mkdirSync, readdirSync } from 'fs';
-import { request } from 'https';
-import * as url from 'url';
-const __dirname=url.fileURLToPath(new URL('.', import.meta.url));
+const fs = require('fs');
+const path = require('path');
+const https = require('https');
 
 // Canned SQL query interface:
-import { sqlQuery, Types } from './canned-sql.js';
+const cannedSql=require('./canned-sql.js');
 
 // QR Code module:
-import { toFile } from 'qrcode'; // https://www.npmjs.com/package/qrcode
+const qr = require('qrcode'); // https://www.npmjs.com/package/qrcode
 
 // Other modules:
-import express, { json, urlencoded } from 'express';
-import cookieSession from 'cookie-session';
+const express = require('express');
+const cookieSession = require('cookie-session');
 
 // HTTP port that the server will run on:
 var serverPort=process.argv[2] || process.env.PORT || 3000;
@@ -27,8 +26,8 @@ app.disable('etag');
 app.disable('x-powered-by');
 app.enable('trust proxy');
 
-app.use(json());
-app.use(urlencoded( { extended: true }));
+app.use(express.json());
+app.use(express.urlencoded( { extended: true }));
 
 app.use(cookieSession({
     name: 'session',
@@ -278,13 +277,13 @@ app.post('/api/get-admin-sessions', async function (req, res, next) {
 app.get('/qr/:sessionid([0-9]*)', async function (req, res, next) {
 
     const dir=__dirname+'/qr';
-    if (!existsSync(dir)) { mkdirSync(dir); }
+    if (!fs.existsSync(dir)) { fs.mkdirSync(dir); }
 
     const file=dir+'/'+req.params.sessionid+'.png';
     const url='https://'+req.headers.host+'/'+req.params.sessionid;
 
     // Create the PNG file:
-    if (!existsSync(file)) {
+    if (!fs.existsSync(file)) {
         try {
             await createQrFile(file, url);
         } catch(e) {
@@ -305,13 +304,13 @@ app.get('/qr/:sessionid([0-9]*)', async function (req, res, next) {
 app.get('/qr/event/:eventid([0-9]*)', async function (req, res, next) {
 
     const dir=__dirname+'/qr';
-    if (!existsSync(dir)) { mkdirSync(dir); }
+    if (!fs.existsSync(dir)) { fs.mkdirSync(dir); }
 
     const file=dir+'/event-'+req.params.eventid+'.png';
     const url='https://'+req.headers.host+'/event/'+req.params.eventid;
 
     // Create the PNG file:
-    if (!existsSync(file)) {
+    if (!fs.existsSync(file)) {
         try {
             await createQrFile(file, url);
         } catch(e) {
@@ -332,7 +331,7 @@ app.get('/qr/event/:eventid([0-9]*)', async function (req, res, next) {
 async function createQrFile(file, url) {
 
     return new Promise((resolve, reject) => {
-        toFile(file, url, { type: 'png', width: 512, margin: 0 }, (err) => {
+        qr.toFile(file, url, { type: 'png', width: 512, margin: 0 }, (err) => {
             if (err) {
                 reject();
             } else {
@@ -382,7 +381,7 @@ app.get('/api/get-stylesheets', async function (req, res, next) {
     httpHeaders(res);
     var stylesheets=[];
 
-    readdirSync(__dirname+'/assets/').forEach(file => {
+    fs.readdirSync(__dirname+'/assets/').forEach(file => {
         if (file.endsWith('.css') && file!='the-lipstick.css') {
             stylesheets.push('/'+file);
         }
@@ -471,7 +470,7 @@ async function getSessionizeJSON(apikey) {
             method: 'GET'
         };
 
-        const webReq = request(
+        const webReq = https.request(
                 'https://sessionize.com/api/v2/'+encodeURIComponent(apikey)+'/view/Sessions',
                 options,
                 (res) => {
@@ -601,12 +600,12 @@ function httpHeaders(res) {
 async function createEvent(name, apikey, templateName, css) {
 
     return new Promise((resolve, reject) => {
-        sqlQuery(connectionString,
+        cannedSql.sqlQuery(connectionString,
             'EXECUTE Feedback.Create_Event @Name=@name, @From_template_name=@templateName, @Sessionize_API_key=@apikey, @CSS=@css;',
-            [   { "name": 'name',         "type": Types.NVarChar,   "value": name },
-                { "name": 'templateName', "type": Types.NVarChar,   "value": templateName },
-                { "name": 'apikey',       "type": Types.VarChar,    "value": apikey },
-                { "name": 'css',          "type": Types.NVarChar,   "value": css }],
+            [   { "name": 'name',         "type": cannedSql.Types.NVarChar,   "value": name },
+                { "name": 'templateName', "type": cannedSql.Types.NVarChar,   "value": templateName },
+                { "name": 'apikey',       "type": cannedSql.Types.VarChar,    "value": apikey },
+                { "name": 'css',          "type": cannedSql.Types.NVarChar,   "value": css }],
             function(recordset) {
                 var eventId=recordset.data[0].Event_ID;
                 var eventSecret=recordset.data[0].Event_secret;
@@ -619,11 +618,11 @@ async function createEvent(name, apikey, templateName, css) {
 async function createPresenter(name, email, identifier) {
 
     return new Promise((resolve, reject) => {
-        sqlQuery(connectionString,
+        cannedSql.sqlQuery(connectionString,
             'EXECUTE Feedback.Create_Presenter @Name=@name, @Email=@email, @Identifier=@identifier;',
-            [   { "name": 'name', "type": Types.NVarChar, "value": name },
-                { "name": 'email', "type": Types.VarChar, "value": email },
-                { "name": 'identifier', "type": Types.VarChar, "value": identifier }],
+            [   { "name": 'name', "type": cannedSql.Types.NVarChar, "value": name },
+                { "name": 'email', "type": cannedSql.Types.VarChar, "value": email },
+                { "name": 'identifier', "type": cannedSql.Types.VarChar, "value": identifier }],
             async function (recordset) {
                 var presenterId = recordset.data[0].Presenter_ID;
                 resolve(presenterId);
@@ -634,11 +633,11 @@ async function createPresenter(name, email, identifier) {
 async function createSession(eventId, title, sessionizeId) {
 
     return new Promise((resolve, reject) => {
-        sqlQuery(connectionString,
+        cannedSql.sqlQuery(connectionString,
             'EXECUTE Feedback.Create_Session  @Event_ID=@eventId, @Title=@title, @Sessionize_id=@sessionizeId;',
-            [   { "name": 'eventId', "type": Types.Int,      "value": eventId },
-                { "name": 'title',   "type": Types.NVarChar, "value": title },
-                { "name": 'sessionizeId', "type": Types.Int, "value": sessionizeId }],
+            [   { "name": 'eventId', "type": cannedSql.Types.Int,      "value": eventId },
+                { "name": 'title',   "type": cannedSql.Types.NVarChar, "value": title },
+                { "name": 'sessionizeId', "type": cannedSql.Types.Int, "value": sessionizeId }],
             async function (recordset) {
                 var sessionId = recordset.data[0].Session_ID;
                 resolve(sessionId);
@@ -649,11 +648,11 @@ async function createSession(eventId, title, sessionizeId) {
 async function createSessionPresenter(sessionId, presenterId, isOwner) {
 
     return new Promise((resolve, reject) => {
-        sqlQuery(connectionString,
+        cannedSql.sqlQuery(connectionString,
             'EXECUTE Feedback.Create_Session_Presenter  @Session_ID=@sessionId, @Presenter_ID=@presenterId, @Is_session_owner=@isOwner;',
-            [   { "name": 'sessionId',   "type": Types.BigInt, "value": sessionId },
-                { "name": 'presenterId', "type": Types.Int,    "value": presenterId },
-                { "name": 'isOwner',     "type": Types.Bit,    "value": isOwner }],
+            [   { "name": 'sessionId',   "type": cannedSql.Types.BigInt, "value": sessionId },
+                { "name": 'presenterId', "type": cannedSql.Types.Int,    "value": presenterId },
+                { "name": 'isOwner',     "type": cannedSql.Types.Bit,    "value": isOwner }],
             async function (recordset) {
                 resolve();
             });
@@ -663,9 +662,9 @@ async function createSessionPresenter(sessionId, presenterId, isOwner) {
 async function initResponse(sessionId) {
 
     return new Promise((resolve, reject) => {
-        sqlQuery(connectionString,
+        cannedSql.sqlQuery(connectionString,
             'EXECUTE Feedback.Init_Response  @Session_ID=@sessionId;',
-            [   { "name": 'sessionId',   "type": Types.BigInt, "value": sessionId }],
+            [   { "name": 'sessionId',   "type": cannedSql.Types.BigInt, "value": sessionId }],
             async function (recordset) {
                 try {
                     var blob = JSON.parse(recordset.data[0].Question_blob);
@@ -680,14 +679,14 @@ async function initResponse(sessionId) {
 async function saveResponse(responseId, questionId, answerOrdinal, plaintext) {
 
     return new Promise((resolve, reject) => {
-        sqlQuery(connectionString,
+        cannedSql.sqlQuery(connectionString,
             'EXECUTE Feedback.Save_Response_Answer '+
                     '@Response_ID=@responseId, @Question_ID=@questionId, '+
                     '@Answer_ordinal=@answerOrdinal, @Plaintext=@plaintext;',
-            [   { "name": 'responseId',     "type": Types.BigInt,             "value": responseId },
-                { "name": 'questionId',     "type": Types.Int,                "value": questionId },
-                { "name": 'answerOrdinal',  "type": Types.SmallInt,           "value": answerOrdinal },
-                { "name": 'plaintext',      "type": Types.NVarChar,           "value": plaintext }],
+            [   { "name": 'responseId',     "type": cannedSql.Types.BigInt,             "value": responseId },
+                { "name": 'questionId',     "type": cannedSql.Types.Int,                "value": questionId },
+                { "name": 'answerOrdinal',  "type": cannedSql.Types.SmallInt,           "value": answerOrdinal },
+                { "name": 'plaintext',      "type": cannedSql.Types.NVarChar,           "value": plaintext }],
             function(recordset) {
                 resolve(recordset);
             });
@@ -697,10 +696,10 @@ async function saveResponse(responseId, questionId, answerOrdinal, plaintext) {
 async function listSessions(responseId) {
 
     return new Promise((resolve, reject) => {
-        sqlQuery(connectionString,
+        cannedSql.sqlQuery(connectionString,
             'EXECUTE Feedback.Get_Sessions '+
                     '@Response_ID=@responseId;',
-            [   { "name": 'responseId',     "type": Types.BigInt,             "value": responseId }],
+            [   { "name": 'responseId',     "type": cannedSql.Types.BigInt,             "value": responseId }],
             function(recordset) {
                 try {
                     var blob = JSON.parse(recordset.data[0].Sessions_blob);
@@ -715,9 +714,9 @@ async function listSessions(responseId) {
 async function listSessionsByEvent(eventId) {
 
     return new Promise((resolve, reject) => {
-        sqlQuery(connectionString,
+        cannedSql.sqlQuery(connectionString,
             'EXECUTE Feedback.Get_Sessions @Event_ID=@eventId;',
-            [   { "name": 'eventId', "type": Types.Int, "value": eventId }],
+            [   { "name": 'eventId', "type": cannedSql.Types.Int, "value": eventId }],
             function(recordset) {
                 try {
                     var blob = JSON.parse(recordset.data[0].Sessions_blob);
@@ -732,11 +731,11 @@ async function listSessionsByEvent(eventId) {
 async function listPresenterSessions(presenterId, eventId) {
 
     return new Promise((resolve, reject) => {
-        sqlQuery(connectionString,
+        cannedSql.sqlQuery(connectionString,
             'EXECUTE Feedback.Get_Sessions '+
                     '@Presenter_ID=@presenterId, @Event_ID=@eventId;',
-            [   { "name": 'presenterId', "type": Types.Int, "value": presenterId },
-                { "name": 'eventId',     "type": Types.Int, "value": eventId }],
+            [   { "name": 'presenterId', "type": cannedSql.Types.Int, "value": presenterId },
+                { "name": 'eventId',     "type": cannedSql.Types.Int, "value": eventId }],
             function(recordset) {
                 try {
                     var blob = JSON.parse(recordset.data[0].Sessions_blob);
@@ -751,7 +750,7 @@ async function listPresenterSessions(presenterId, eventId) {
 async function listTemplates() {
 
     return new Promise((resolve, reject) => {
-        sqlQuery(connectionString,
+        cannedSql.sqlQuery(connectionString,
             'EXECUTE Feedback.Get_Templates;',
             [],
             function(recordset) {
@@ -764,9 +763,9 @@ async function listTemplates() {
 async function adminEventInfo(eventSecret) {
 
     return new Promise((resolve, reject) => {
-        sqlQuery(connectionString,
+        cannedSql.sqlQuery(connectionString,
             'EXECUTE Feedback.Admin_Event_Info @Event_secret=@eventSecret;',
-            [ { "name": 'eventSecret', "type": Types.UniqueIdentifier, "value": eventSecret } ],
+            [ { "name": 'eventSecret', "type": cannedSql.Types.UniqueIdentifier, "value": eventSecret } ],
             function(recordset) {
                 try {
                     var blob = JSON.parse(recordset.data[0].Event_blob);
@@ -781,9 +780,9 @@ async function adminEventInfo(eventSecret) {
 async function getReport(eventSecret) {
 
     return new Promise((resolve, reject) => {
-        sqlQuery(connectionString,
+        cannedSql.sqlQuery(connectionString,
             'EXECUTE Feedback.Get_Event_Report @Event_secret=@eventSecret;',
-            [   { "name": 'eventSecret', "type": Types.UniqueIdentifier, "value": eventSecret }],
+            [   { "name": 'eventSecret', "type": cannedSql.Types.UniqueIdentifier, "value": eventSecret }],
             function(recordset) {
                 try {
                     var blob = JSON.parse(recordset.data[0].Report_blob);
