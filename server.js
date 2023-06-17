@@ -134,7 +134,14 @@ function sendTemplate(req, res, next) {
 app.get('/', function (req, res, next) {
 
     httpHeaders(res);
-    res.redirect('/admin');
+
+    res.status(200).sendFile('about.html', sendFileOptions('/', 60 * 60 * 1000), function(err) {
+        if (err) {
+            res.sendStatus(200);
+            return;
+        }
+    });
+
     return;
 
 });

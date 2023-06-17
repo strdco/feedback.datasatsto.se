@@ -234,7 +234,7 @@ html {
     .question .question-text {
         display: block;
         font-weight: bold;
-        padding: 1rem 0 0 0;
+        padding: 1rem 0 0.5rem 0;
     }
 
     .question.required .question-text::after {
@@ -243,10 +243,14 @@ html {
         margin-left: 0.25rem;
     }
 
-    .question .question-description {
+    .question span {
         display: block;
+        padding-bottom: 1rem;
+    }
+
+    .question .question-description {
         font-style: italic;
-        padding: 0.25rem 0 0 0;
+        padding: 0.25rem 0 0.75rem 0;
     }
 
 /* Answers on question cards. */
