@@ -215,6 +215,10 @@ Creates the JSON blob returned by the [event report](#apireportevent-secret).
 
 # Entry points
 
+## /
+
+Shows the "about" text, with links to the import and admin utilities.
+
 ## /import
 
 Allows the user to import an event from Sessionize.
@@ -264,9 +268,13 @@ Creates a response, returns a blob with all questions and answer options for the
 
 Returns event information and a list of presenters for a given event.
 
-## /api/get-template
+## /api/get-templates
 
 Returns a list of event templates.
+
+## /api/get-stylesheets
+
+Returns a list of CSS files in the root directory.
 
 ## /api/import-sessionize (POST)
 
