@@ -55,6 +55,7 @@ To deploy to Azure Web Apps,
     * dblogin: the name of the SQL security principal
     * dbpassword: password for the SQL principal
     * dbname: the name of the SQL database
+    * masterpassword: a master password required to import events (optional)
 * In Deployment Center, set up the app to automatic deploy from Github
     * Make sure to set the build provider to "App Service Build Service", not "Github Actions".
 
@@ -275,6 +276,12 @@ Returns a list of event templates.
 ## /api/get-stylesheets
 
 Returns a list of CSS files in the root directory.
+
+## /api/has-masterpassword
+
+Returns a true/false value to reflect if the web server has a masterpassword
+environment variable configured. Used by the import utility to determine if
+it should ask for the password or not.
 
 ## /api/import-sessionize (POST)
 

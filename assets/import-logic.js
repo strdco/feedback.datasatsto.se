@@ -1,4 +1,5 @@
 var templateList=[];
+var requiresMasterPassword;
 
 window.onload = function whatsUp() {
 
@@ -7,6 +8,7 @@ window.onload = function whatsUp() {
 
     importTemplates();
     importStylesheets();
+    getMPW();
 }
 
 function importTemplates() {
@@ -88,7 +90,29 @@ function importStylesheets() {
 
 }
 
+function getMPW() {
+    var xhr = new XMLHttpRequest();
+    xhr.onload = function() {
+        if (xhr.status == 200) {
+            try {
 
+                const resp=JSON.parse(xhr.response);
+                requiresMasterPassword=resp.hasMasterPassword;
+
+                if (!requiresMasterPassword) {
+                    document.getElementById('masterPassword').parentNode.style.display='none';
+                }
+
+            } catch(err) {
+                // TODO
+                console.log(err);
+            }
+        }
+    }
+
+    xhr.open('GET', '/api/has-masterpassword');
+    xhr.send();
+}
 
 
 
@@ -143,7 +167,7 @@ function doImport() {
         return;
     }
 
-    if (!masterPassword.value) {
+    if (requiresMasterPassword && !masterPassword.value) {
         showStatus('You need to specify the master password.', 'bad');
         masterPassword.focus();
         return;

@@ -397,6 +397,12 @@ app.get('/api/get-stylesheets', async function (req, res, next) {
     res.status(200).send(stylesheets);
 });
 
+// Returns true or false, depending on if the site has a master password configured
+app.get('/api/has-masterpassword', async function (req, res, next) {
+    httpHeaders(res);
+    res.status(200).send({ "hasMasterPassword": (process.env.masterpassword!='') });
+});
+
 // Perform the Sessionize import
 app.post('/api/import-sessionize', async function (req, res, next) {
 
@@ -416,14 +422,16 @@ app.post('/api/import-sessionize', async function (req, res, next) {
         return;
     }
 
-    if (!masterPassword) {
-        res.status(401).send({ "status": "error", "message": "You need to specify the master password." });
-        return;
-    }
+    if (process.env.masterpassword) {
+        if (!masterPassword) {
+            res.status(401).send({ "status": "error", "message": "You need to specify the master password." });
+            return;
+        }
 
-    if (masterPassword!=process.env.masterpassword) {
-        res.status(401).send({ "status": "error", "message": "The master password was incorrect. Contact the server admin if you need help." });
-        return;
+        if (masterPassword!=process.env.masterpassword) {
+            res.status(401).send({ "status": "error", "message": "The master password was incorrect. Contact the server admin if you need help." });
+            return;
+        }
     }
 
     var sessions;
