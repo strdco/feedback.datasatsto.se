@@ -17,7 +17,51 @@ html {
     --answer-border: rgb(192, 192, 192);
 
     --border-color: rgb(0, 0, 0, 0.5);
-    --dashed-border-color: 
+
+    /* Fancy diamond-style background */
+    --size: max(15vw, 15vh);
+    --bg-art-1: rgba(200, 200, 200, 0.5);
+    --bg-art-2: rgba(230, 230, 230, 0.7);
+    --bg-art-3: rgba(180, 180, 180, 0.3);
+    --bg-art-4: rgba(255, 255, 255, 0.35);
+  
+    .background-pattern {
+        display: block;
+        border-top-width: var(--size);
+        border-right-width: var(--size);
+        border-bottom-width: var(--size);
+        border-left-width: var(--size);
+        width: 0; height: 0;
+        top: calc(var(--size) * 0.5);
+        left: calc(var(--size) * 1);
+        position: fixed;
+        border-style: solid;
+        border-top-color: var(--bg-art-1);
+        border-right-color: var(--bg-art-2);
+        border-bottom-color: var(--bg-art-3);
+        border-left-color: var(--bg-art-4);
+        transform: rotate(30deg) scale(3, 2.5);
+        z-index: -100;
+    }
+      
+    .background-pattern::after {
+        content: "";
+        border-top-width: var(--size);
+        border-right-width: var(--size);
+        border-bottom-width: var(--size);
+        border-left-width: var(--size);
+        width: 0; height: 0;
+        top: calc(var(--size) * -0.75);
+        left: calc(var(--size) * -1.5);
+        position: fixed;
+        border-style: solid;
+        border-top-color: var(--bg-art-2);
+        border-right-color: var(--bg-art-3);
+        border-bottom-color: var(--bg-art-4);
+        border-left-color: var(--bg-art-1);
+        transform: rotate(230deg) scale(1, 1.75);
+        z-index: -100;
+    }
 }
 
 
