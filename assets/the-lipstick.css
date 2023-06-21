@@ -19,7 +19,7 @@ html {
     --border-color: rgb(0, 0, 0, 0.5);
 
     /* Fancy diamond-style background */
-    --size: max(15vw, 15vh);
+    --size: max(18vw, 18vh);
     --bg-art-1: rgba(200, 200, 200, 0.5);
     --bg-art-2: rgba(230, 230, 230, 0.7);
     --bg-art-3: rgba(180, 180, 180, 0.3);
