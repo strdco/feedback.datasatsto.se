@@ -937,12 +937,12 @@ SELECT (
             (SELECT p.Presenter_ID AS presenterId,
                     p.[Name] AS [name],
                     p.Email AS email
-                FROM Feedback.Session_presenters AS sp
-                INNER JOIN Feedback.Presenters AS p ON sp.Presented_by_ID=p.Presenter_ID
-                WHERE sp.Session_ID IN (
-                    SELECT Session_ID
-                    FROM Feedback.[Sessions]
-                    WHERE Event_ID=@Event_ID)
+                FROM Feedback.Presenters AS p
+                WHERE p.Presenter_ID IN (
+                    SELECT sp.Presented_by_ID
+                    FROM Feedback.[Sessions] AS s
+                    INNER JOIN Feedback.Session_presenters AS sp ON s.Session_ID=sp.Session_ID
+                    WHERE s.Event_ID=@Event_ID)
                 FOR JSON PATH) AS presenters,
 
             (SELECT q.Question_ID AS questionId,
