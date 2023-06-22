@@ -976,6 +976,7 @@ SELECT (
 
                     (SELECT r.Created AS created,
                             r.Updated AS updated,
+                            r.Response_ID AS responseId,
 
                             (SELECT ra.Answer_option_ID AS optionId
                              FROM Feedback.Response_Answers AS ra
