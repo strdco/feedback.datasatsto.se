@@ -937,13 +937,13 @@ SELECT (
             (SELECT p.Presenter_ID AS presenterId,
                     p.[Name] AS [name],
                     p.Email AS email
-                FROM Feedback.Presenters AS p
-                WHERE p.Presenter_ID IN (
+             FROM Feedback.Presenters AS p
+             WHERE p.Presenter_ID IN (
                     SELECT sp.Presented_by_ID
                     FROM Feedback.[Sessions] AS s
                     INNER JOIN Feedback.Session_presenters AS sp ON s.Session_ID=sp.Session_ID
                     WHERE s.Event_ID=@Event_ID)
-                FOR JSON PATH) AS presenters,
+             FOR JSON PATH) AS presenters,
 
             (SELECT q.Question_ID AS questionId,
                     q.Display_order AS displayOrder,
@@ -955,14 +955,14 @@ SELECT (
                             ao.Answer_ordinal AS ordinal,
                             ao.Percent_value AS [percent],
                             ao.Annotation AS annotation
-                        FROM Feedback.Answer_options AS ao
-                        WHERE ao.Question_ID=q.Question_ID
-                        ORDER BY ao.Answer_ordinal
-                        FOR JSON PATH) AS options
+                     FROM Feedback.Answer_options AS ao
+                     WHERE ao.Question_ID=q.Question_ID
+                     ORDER BY ao.Answer_ordinal
+                     FOR JSON PATH) AS options
 
-                FROM Feedback.Questions AS q
-                WHERE q.Event_ID=@Event_ID
-                FOR JSON PATH) AS questions,
+             FROM Feedback.Questions AS q
+             WHERE q.Event_ID=@Event_ID
+             FOR JSON PATH) AS questions,
 
             (SELECT s.Session_ID AS sessionId,
                     s.Sessionize_id AS sessionizeId,
@@ -970,30 +970,31 @@ SELECT (
 
                     (SELECT sp.Presented_by_ID AS presenterId,
                             sp.Is_session_owner AS isOwner
-                        FROM Feedback.Session_Presenters AS sp
-                        WHERE sp.Session_ID=s.Session_ID
-                        FOR JSON PATH) AS presenters,
+                     FROM Feedback.Session_Presenters AS sp
+                     WHERE sp.Session_ID=s.Session_ID
+                     FOR JSON PATH) AS presenters,
 
                     (SELECT r.Created AS created,
                             r.Updated AS updated,
 
                             (SELECT ra.Answer_option_ID AS optionId
-                                FROM Feedback.Response_Answers AS ra
-                                WHERE ra.Response_ID=r.Response_ID
-                                FOR JSON PATH) AS answers,
+                             FROM Feedback.Response_Answers AS ra
+                             WHERE ra.Response_ID=r.Response_ID
+                             FOR JSON PATH) AS answers,
 
-                            (SELECT rp.Plaintext AS [text]
-                                FROM Feedback.Response_Plaintext AS rp
-                                WHERE rp.Response_ID=r.Response_ID
-                                FOR JSON PATH) AS textAnswers
+                            (SELECT rp.Question_ID AS questionId, 
+                                    rp.Plaintext AS [text]
+                             FROM Feedback.Response_Plaintext AS rp
+                             WHERE rp.Response_ID=r.Response_ID
+                             FOR JSON PATH) AS textAnswers
 
-                        FROM Feedback.Responses AS r
-                        WHERE r.Session_ID=s.Session_ID
-                        FOR JSON PATH) AS responses
+                     FROM Feedback.Responses AS r
+                     WHERE r.Session_ID=s.Session_ID
+                     FOR JSON PATH) AS responses
 
-                FROM Feedback.[Sessions] AS s
-                WHERE s.Event_ID=@Event_ID
-                FOR JSON PATH) AS [sessions]
+             FROM Feedback.[Sessions] AS s
+             WHERE s.Event_ID=@Event_ID
+             FOR JSON PATH) AS [sessions]
 
         FROM Feedback.[Events] AS e
         WHERE e.Event_ID=@Event_ID
