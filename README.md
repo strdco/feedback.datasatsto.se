@@ -19,13 +19,14 @@ The goal for this solution is to be faster, easier, and cleaner than paper.
 This web is published as:
 
 * feedback.datasatsto.se
-* eval.sqlsaturday.com
+* [eval.sqlsaturday.com](https://eval.datasaturdays.com/)
+* [eval.datasaturdays.com](https://eval.datasaturdays.com/)
 
 If you want me to add a DNS alias for you, contact me and we'll get you set up.
 
 # Workflow
 
-* The oprganizer [imports sessions](#importing-from-sessionize) and speakers from Sessionize
+* The organizer [imports sessions](#importing-from-sessionize) and speakers from Sessionize
 * The organizer distributes QR codes from the [admin page](#admin) to speakers
 * Attendees follow a QR code to the [review page](#session-id)
 * After the event, the organizer extracts a [dataset](#apireportevent-secret) with the sessions and evaluations
