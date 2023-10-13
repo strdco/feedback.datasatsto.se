@@ -31,7 +31,7 @@ BEGIN TRANSACTION;
     --- 5.
     INSERT INTO @id (ID) EXECUTE Feedback.Create_Question @Event_ID=@Template_ID, @Question=N'Speaker''s knowledge', @Optimal_percent=100, @Description='in relation to the presentation', @Is_required=0, @Has_plaintext=0, @Display_order=5, @Type='radio';
     --- 6.
-    INSERT INTO @id (ID) EXECUTE Feedback.Create_Question @Event_ID=@Template_ID, @Question=N'Did you learn something?', @Optimal_percent=100, @Is_required=0, @Has_plaintext=0, @Display_order=6, @Type='radio';
+    INSERT INTO @id (ID) EXECUTE Feedback.Create_Question @Event_ID=@Template_ID, @Question=N'Did you learn something?', @Description=N'What were your key takeaways from the session?', @Optimal_percent=100, @Is_required=0, @Has_plaintext=1, @Display_order=6, @Type='radio';
     --- 7.
     INSERT INTO @id (ID) EXECUTE Feedback.Create_Question @Event_ID=@Template_ID, @Question=N'How was the difficulty?', @Optimal_percent=0, @Description='in relation to the session abstract', @Is_required=0, @Has_plaintext=0, @Display_order=7, @Type='radio';
     --- 8.
