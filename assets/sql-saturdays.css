@@ -4,7 +4,7 @@
 /* Theme colors */
 
     html {
-        --header-logo-image: url('/sql-saturdays.png');
+        --header-logo-image: url('https://sqlsaturday.com/assets/img/events/sandiego/sqlsatsd_logo.jpg');
         --header-logo-width: 195px;
         --header-logo-height: 112px;
 
