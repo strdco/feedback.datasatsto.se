@@ -6,7 +6,7 @@
     html {
         --header-logo-image: url('/sql-saturdays-sd.jpg');
         --header-logo-width: 195px;
-        --header-logo-height: 112px;
+        --header-logo-height: 195px;
 
         --theme-black: rgb(0, 0, 0);
         --theme-white: rgb(255, 255, 255);
