@@ -169,7 +169,8 @@ app.get('/', function (req, res, next) {
   ---------------------------------------------------------------------------*/
 
 console.log("*c");
-app.get('/:sessionid\\d+', sendTemplate);
+// GET /123456
+app.get(/^\/(\d+)$/, sendTemplate);
 
 // Get the questions and answer options for a session
 app.get('/api/create-response/:sessionid', async function (req, res, next) {
@@ -215,7 +216,8 @@ app.post('/api/save', async function (req, res, next) {
   ---------------------------------------------------------------------------*/
 
 console.log("*e");
-app.get('/event/:eventId\\d+', sendTemplate);
+// GET /event/123456
+app.get(/^\/event\/(\d+)$/, sendTemplate);
 
 console.log("*f");
 app.get('/sessions', sendTemplate);
@@ -332,13 +334,14 @@ app.post('/api/get-admin-presenters', async function (req, res, next) {
 
 // Send the QR code for this session 
 console.log("*l");
-app.get('/qr/:sessionid\\d+', async function (req, res, next) {
+// GET /qr/123456
+app.get(/^\/qr\/(\d+)$/, async function (req, res, next) {
 
     const dir=__dirname+'/qr';
     if (!fs.existsSync(dir)) { fs.mkdirSync(dir); }
 
-    const file=dir+'/'+req.params.sessionid+'.png';
-    const url='https://'+req.headers.host+'/'+req.params.sessionid;
+    const file=dir+'/'+req.params[0]+'.png';
+    const url='https://'+req.headers.host+'/'+req.params[0];
 
     // Create the PNG file:
     if (!fs.existsSync(file)) {
@@ -350,7 +353,7 @@ app.get('/qr/:sessionid\\d+', async function (req, res, next) {
     }
 
     // ... and return it to the client:
-    res.sendFile('/qr/'+req.params.sessionid+'.png', sendFileOptions('/', 60 * 60 * 1000), function(err) {
+    res.sendFile('/qr/'+req.params[0]+'.png', sendFileOptions('/', 60 * 60 * 1000), function(err) {
         if (err) {
             res.sendStatus(404);
             return;
@@ -359,14 +362,15 @@ app.get('/qr/:sessionid\\d+', async function (req, res, next) {
 });
 
 console.log("*m");
-// Send the QR code for this event 
-app.get('/qr/event/:eventid\\d+', async function (req, res, next) {
+// Send the QR code for this event
+// GET /qr/event/123456
+app.get(/^\/qr\/event\/(\d+)$/, async function (req, res, next) {
 
     const dir=__dirname+'/qr';
     if (!fs.existsSync(dir)) { fs.mkdirSync(dir); }
 
-    const file=dir+'/event-'+req.params.eventid+'.png';
-    const url='https://'+req.headers.host+'/event/'+req.params.eventid;
+    const file=dir+'/event-'+req.params[0]+'.png';
+    const url='https://'+req.headers.host+'/event/'+req.params[0];
 
     // Create the PNG file:
     if (!fs.existsSync(file)) {
@@ -378,7 +382,7 @@ app.get('/qr/event/:eventid\\d+', async function (req, res, next) {
     }
 
     // ... and return it to the client:
-    res.sendFile('/qr/event-'+req.params.eventid+'.png', sendFileOptions('/', 60 * 60 * 1000), function(err) {
+    res.sendFile('/qr/event-'+req.params[0]+'.png', sendFileOptions('/', 60 * 60 * 1000), function(err) {
         if (err) {
             res.sendStatus(404);
             return;
