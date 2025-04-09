@@ -110,7 +110,7 @@ app.listen(serverPort, () => console.log('READY.'));
 /*-----------------------------------------------------------------------------
   Azure Linux App Service Plan health check request:
   ---------------------------------------------------------------------------*/
-console.log("*a");
+
 app.get('/robots933456.txt', function (req, res, next) {
     console.log("Azure health check: OK.");
     res.status(200).send("OK");
@@ -142,7 +142,6 @@ function sendTemplate(req, res, next) {
 /*-----------------------------------------------------------------------------
   Default URL: redirect to the admin page.
   ---------------------------------------------------------------------------*/
-console.log("*b");
 
 app.get('/', function (req, res, next) {
 
@@ -168,7 +167,6 @@ app.get('/', function (req, res, next) {
   Evaluate a new session
   ---------------------------------------------------------------------------*/
 
-console.log("*c");
 // GET /123456
 app.get(/^\/(\d+)$/, sendTemplate);
 
@@ -184,7 +182,6 @@ app.get('/api/create-response/:sessionid', async function (req, res, next) {
     }
 });
 
-console.log("*d");
 // Save responses - fires every time a user makes/changes a selection
 app.post('/api/save', async function (req, res, next) {
 
@@ -215,14 +212,11 @@ app.post('/api/save', async function (req, res, next) {
   Users arrive here when they click the "Done" button on the eval form.
   ---------------------------------------------------------------------------*/
 
-console.log("*e");
 // GET /event/123456
 app.get(/^\/event\/(\d+)$/, sendTemplate);
 
-console.log("*f");
 app.get('/sessions', sendTemplate);
 
-console.log("*g");
 app.post('/api/sessions', async function (req, res, next) {
     httpHeaders(res);
 
@@ -274,7 +268,6 @@ app.post('/api/sessions', async function (req, res, next) {
   Users arrive here using link that contains the event id and presenter secret.
   ---------------------------------------------------------------------------*/
 
-console.log("*h");
 app.get('/presenter-report/:eventId/:presenterSecret', sendTemplate);
 
 
@@ -290,10 +283,8 @@ app.get('/presenter-report/:eventId/:presenterSecret', sendTemplate);
   name, and a URL to the evaluation form.
   ---------------------------------------------------------------------------*/
 
-console.log("*i");
 app.get('/admin', sendTemplate);
 
-console.log("*j");
 // Get list of sessions for the event.
 app.post('/api/get-admin-sessions', async function (req, res, next) {
 
@@ -308,7 +299,6 @@ app.post('/api/get-admin-sessions', async function (req, res, next) {
 
 });
 
-console.log("*k");
 app.post('/api/get-admin-presenters', async function (req, res, next) {
 
     var eventSecret=req.body.eventSecret.trim();
@@ -333,7 +323,6 @@ app.post('/api/get-admin-presenters', async function (req, res, next) {
   ---------------------------------------------------------------------------*/
 
 // Send the QR code for this session 
-console.log("*l");
 // GET /qr/123456
 app.get(/^\/qr\/(\d+)$/, async function (req, res, next) {
 
@@ -361,7 +350,6 @@ app.get(/^\/qr\/(\d+)$/, async function (req, res, next) {
     });
 });
 
-console.log("*m");
 // Send the QR code for this event
 // GET /qr/event/123456
 app.get(/^\/qr\/event\/(\d+)$/, async function (req, res, next) {
@@ -418,7 +406,6 @@ async function createQrFile(file, url) {
   TODO: Parameter for how long a session accepts responses
   ---------------------------------------------------------------------------*/
 
-console.log("*n");
 app.get('/import', function(req, res, next) {
     httpHeaders(res);
 
@@ -433,7 +420,6 @@ app.get('/import', function(req, res, next) {
 });
 
 // List all available event templates
-console.log("*o");
 app.get('/api/get-templates', async function (req, res, next) {
 
     httpHeaders(res);
@@ -442,7 +428,6 @@ app.get('/api/get-templates', async function (req, res, next) {
 });
 
 // List all available .css files (stylesheets)
-console.log("*p");
 app.get('/api/get-stylesheets', async function (req, res, next) {
     httpHeaders(res);
     var stylesheets=[];
@@ -457,14 +442,12 @@ app.get('/api/get-stylesheets', async function (req, res, next) {
 });
 
 // Returns true or false, depending on if the site has a master password configured
-console.log("*q");
 app.get('/api/has-masterpassword', async function (req, res, next) {
     httpHeaders(res);
     res.status(200).send({ "hasMasterPassword": (process.env.masterpassword!='') });
 });
 
 // Perform the Sessionize import
-console.log("*r");
 app.post('/api/import-sessionize', async function (req, res, next) {
 
     var eventName=req.body.eventName.trim();
@@ -594,7 +577,6 @@ async function getSessionizeJSON(apikey) {
   Generate the event report
   ---------------------------------------------------------------------------*/
 
-console.log("*s");
 app.get('/api/report/:eventsecret', async function(req, res, next) {
     httpHeaders(res);
 
@@ -618,7 +600,6 @@ app.get('/api/report/:eventsecret', async function(req, res, next) {
   Generate the presenter report
   ---------------------------------------------------------------------------*/
 
-console.log("*t");
 app.post('/api/presenter-report', async function(req, res, next) {
     httpHeaders(res);
 
@@ -645,7 +626,6 @@ app.post('/api/presenter-report', async function(req, res, next) {
   actor from accessing them.
   ---------------------------------------------------------------------------*/
 
-console.log("*u");
 app.get('/:asset', function (req, res, next) {
     httpHeaders(res);
 
