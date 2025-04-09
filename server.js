@@ -167,7 +167,7 @@ app.get('/', function (req, res, next) {
   Evaluate a new session
   ---------------------------------------------------------------------------*/
 
-app.get('/:sessionid([0-9]*)', sendTemplate);
+app.get('/:sessionid(\\d+)', sendTemplate);
 
 // Get the questions and answer options for a session
 app.get('/api/create-response/:sessionid', async function (req, res, next) {
@@ -211,7 +211,7 @@ app.post('/api/save', async function (req, res, next) {
   Users arrive here when they click the "Done" button on the eval form.
   ---------------------------------------------------------------------------*/
 
-app.get('/event/:eventId([0-9]*)', sendTemplate);
+app.get('/event/:eventId(\\d+)', sendTemplate);
 app.get('/sessions', sendTemplate);
 
 app.post('/api/sessions', async function (req, res, next) {
@@ -321,7 +321,7 @@ app.post('/api/get-admin-presenters', async function (req, res, next) {
   ---------------------------------------------------------------------------*/
 
 // Send the QR code for this session 
-app.get('/qr/:sessionid([0-9]*)', async function (req, res, next) {
+app.get('/qr/:sessionid(\\d+)', async function (req, res, next) {
 
     const dir=__dirname+'/qr';
     if (!fs.existsSync(dir)) { fs.mkdirSync(dir); }
@@ -348,7 +348,7 @@ app.get('/qr/:sessionid([0-9]*)', async function (req, res, next) {
 });
 
 // Send the QR code for this event 
-app.get('/qr/event/:eventid([0-9]*)', async function (req, res, next) {
+app.get('/qr/event/:eventid(\\d+)', async function (req, res, next) {
 
     const dir=__dirname+'/qr';
     if (!fs.existsSync(dir)) { fs.mkdirSync(dir); }
