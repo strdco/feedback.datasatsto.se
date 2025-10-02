@@ -196,13 +196,21 @@ GO
 -------------------------------------------------------------------------------
 
 CREATE OR ALTER PROCEDURE Feedback.Delete_Event
-    @Event_ID                   int
+    @Sessionize_API_key     varchar(50),
+    @Event_secret           uniqueidentifier=NULL
 AS
 
 SET NOCOUNT ON;
 
-IF (NOT EXISTS (SELECT NULL FROM Feedback.My_Events WHERE Event_ID=@Event_ID))
-    THROW 50001, 'Event not found or you do not have access to it.', 1;
+DECLARE @Event_ID int;
+
+SELECT @Event_ID=Event_ID
+FROM Feedback.[Events]
+WHERE @Event_secret IS NULL AND USER_NAME()!=N'dbo'
+   OR @Event_secret IS NOT NULL AND @Sessionize_API_key=Sessionize_API_key AND @Event_secret=Event_secret;
+
+IF (@Event_ID IS NULL)
+    THROW 50001, N'Invalid sessionize API key or event secret', 1;
 
 BEGIN TRANSACTION;
 
